@@ -1,6 +1,8 @@
 This is online power-up/power down sequence diagram constructor. Its pretty basic, but get job done.
 There is no subscriprions, no ads.
 
+It can create black and white diagrams (checkbox on top left).
+
 I`ve no idea in web programming so all code was written by Gemini.
 
 Link:
