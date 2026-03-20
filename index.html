@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Power-Up Designer (Corrected Cumulative Logic)</title>
+    <title>Power-Up Designer (Curvy Break Edition)</title>
     <style>
         :root { --bg: #121212; --panel: #1e1e1e; --accent: #00e676; --text: #cfd8dc; --break: #ff9800; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
@@ -80,7 +80,7 @@
                     <label>Color</label><input type="color" value="${item.color}" oninput="updateVal('${item.id}', 'color', this.value)">`;
             } else {
                 card.innerHTML = `<button class="remove-btn" onclick="removeItem('${item.id}')">✕</button>
-                    <div style="font-weight:bold; color:var(--break); font-size:0.7rem">TIME BREAK (//)</div>
+                    <div style="font-weight:bold; color:var(--break); font-size:0.7rem">CURVY TIME BREAK (~)</div>
                     <div style="display:flex;gap:5px"><div style="flex:1"><label>Duration (ms)</label><input type="number" value="${item.duration}" oninput="updateVal('${item.id}', 'duration', this.value)"></div>
                     <div style="flex:1"><label>Width (px)</label><input type="number" value="${item.visualWidth}" oninput="updateVal('${item.id}', 'visualWidth', this.value)"></div></div>`;
             }
@@ -97,7 +97,7 @@
         svg.innerHTML = '';
         
         const SCALE = 5, LANE_H = 100, X_OFF = 160;
-        let globalX = X_OFF; // THE SOURCE OF TRUTH: tracks where the NEXT logic starts
+        let globalX = X_OFF;
         
         const railCount = sequence.filter(i => i.type === 'rail').length;
         const totalHeight = (railCount + 1) * LANE_H + 100;
@@ -106,63 +106,16 @@
         let railIndex = 0;
         sequence.forEach((item) => {
             if (item.type === 'break') {
-                // 1. Draw the break slashes
-                drawBreakLines(svg, globalX, item.visualWidth, item.duration, totalHeight, colors.text, isBW);
-                // 2. IMPORTANT: Update globalX so all future rails are shifted
+                drawCurvyBreak(svg, globalX, item.visualWidth, item.duration, totalHeight, colors.text, isBW);
                 globalX += item.visualWidth; 
             } else {
                 const yBase = (railIndex + 1) * LANE_H + 50;
-                // Start drawing from exactly where the last item (rail or break) left off
                 const rStart = globalX + (item.delay * SCALE);
                 const rEnd = rStart + (item.rise * SCALE);
                 const stroke = isBW ? "#000" : item.color;
                 
-                // Signal Trace
                 svg.innerHTML += `<path d="M ${X_OFF},${yBase} L ${rStart},${yBase} L ${rEnd},${yBase-40} L 2800,${yBase-40}" 
                                    fill="none" stroke="${stroke}" stroke-width="3" stroke-linecap="round" />`;
                 
-                // Label
                 svg.innerHTML += `<text x="15" y="${yBase-10}" fill="${stroke}" font-size="14" font-weight="bold">${item.name}</text>`;
-                
-                // Timing Arrow (shows local delay between this rail and the previous sequence point)
-                if (item.delay > 0) drawArrow(svg, globalX, rStart, yBase-15, `${item.delay}ms`, colors.arrow);
-                
-                // Update globalX for the next item in the sequence
-                globalX = rEnd; 
-                railIndex++;
-            }
-        });
-    }
-
-    function drawBreakLines(svg, x, width, ms, height, color, isBW) {
-        const midX = x + (width / 2);
-        const rectFill = isBW ? "#fff" : "#0a0a0a";
-        
-        // Clear background for the break
-        svg.innerHTML += `<rect x="${x}" y="0" width="${width}" height="${height}" fill="${rectFill}" />`;
-        
-        // Slashes centered in the gap
-        for (let y = 10; y < height; y += 40) {
-            svg.innerHTML += `
-                <line x1="${midX-12}" y1="${y+20}" x2="${midX+2}" y2="${y}" stroke="${color}" stroke-width="2.5" />
-                <line x1="${midX-4}" y1="${y+20}" x2="${midX+10}" y2="${y}" stroke="${color}" stroke-width="2.5" />
-            `;
-        }
-        
-        // Label with background rect to clear slashes
-        svg.innerHTML += `
-            <rect x="${midX-35}" y="12" width="70" height="22" fill="${rectFill}" />
-            <text x="${midX}" y="28" fill="${color}" font-size="12" text-anchor="middle" font-weight="bold" font-family="monospace">${ms}ms</text>
-        `;
-    }
-
-    function drawArrow(svg, x1, x2, y, txt, col) {
-        svg.innerHTML += `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${col}" stroke-width="1.5" />
-            <path d="M${x1+6} ${y-4} L${x1} ${y} L${x1+6} ${y+4} M${x2-6} ${y-4} L${x2} ${y} L${x2-6} ${y+4}" fill="none" stroke="${col}" stroke-width="1.5"/>
-            <text x="${(x1+x2)/2}" y="${y-8}" fill="${col}" font-size="11" text-anchor="middle" font-weight="bold" font-family="monospace">${txt}</text>`;
-    }
-
-    updateUI();
-</script>
-</body>
-</html>
+                if (item.delay
