@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power-Up Sequence Constructor</title>
+    <style>
+        :root { --bg: #1e1e1e; --panel: #2d2d2d; --text: #e0e0e0; --accent: #4a9eff; }
+        body { font-family: 'Segoe UI', monospace; background: var(--bg); color: var(--text); padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: var(--panel); padding: 25px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h2 { border-bottom: 2px solid var(--accent); padding-bottom: 10px; margin-top: 0; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th { text-align: left; color: var(--accent); font-size: 0.8em; text-transform: uppercase; }
+        input { background: #3d3d3d; border: 1px solid #555; color: white; padding: 8px; border-radius: 4px; width: 90%; }
+        button { background: var(--accent); color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { opacity: 0.8; }
+        #output { width: 100%; height: 120px; margin-top: 20px; background: #111; color: #0f0; font-family: monospace; font-size: 12px; padding: 10px; border: 1px solid #444; }
+        .hint { font-size: 0.85em; color: #888; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Power-Up Sequence Constructor</h2>
+    <p>Define your rails and timing. Then paste the XML into Draw.io (Extras > Edit Diagram).</p>
+    
+    <table id="railTable">
+        <thead>
+            <tr>
+                <th>Rail Name</th>
+                <th>Delay (ms)</th>
+                <th>Rise Time (ms)</th>
+                <th>Color (Hex)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><input type="text" value="Vin (12V)" class="r-name"></td>
+                <td><input type="number" value="0" class="r-delay"></td>
+                <td><input type="number" value="5" class="r-rise"></td>
+                <td><input type="text" value="#dae8fe" class="r-color"></td>
+            </tr>
+            <tr>
+                <td><input type="text" value="3V3" class="r-name"></td>
+                <td><input type="number" value="20" class="r-delay"></td>
+                <td><input type="number" value="10" class="r-rise"></td>
+                <td><input type="text" value="#d5e8d4" class="r-color"></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <button onclick="addRow()">+ Add Rail</button>
+    <button onclick="generateXML()" style="background: #28a745;">Generate Draw.io XML</button>
+
+    <textarea id="output" readonly placeholder="XML will appear here..."></textarea>
+    <div class="hint">Copy the code above. In Draw.io, go to <b>Extras → Edit Diagram</b>, delete everything, paste this, and click <b>OK</b>.</div>
+</div>
+
+<script>
+    function addRow() {
+        const tbody = document.querySelector('#railTable tbody');
+        const row = tbody.insertRow();
+        row.innerHTML = `
+            <td><input type="text" value="New Rail" class="r-name"></td>
+            <td><input type="number" value="10" class="r-delay"></td>
+            <td><input type="number" value="5" class="r-rise"></td>
+            <td><input type="text" value="#f8cecc" class="r-color"></td>
+        `;
+    }
+
+    function generateXML() {
+        const names = document.querySelectorAll('.r-name');
+        const delays = document.querySelectorAll('.r-delay');
+        const rises = document.querySelectorAll('.r-rise');
+        const colors = document.querySelectorAll('.r-color');
+
+        let xml = `<mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/>`;
+        
+        const SCALE = 5; // 1ms = 5 pixels
+        let currentTimeX = 100; // Starting X offset for labels
+        const Y_STEP = 60;
+        const BAR_HEIGHT = 30;
+
+        names.forEach((n, i) => {
+            const railName = n.value;
+            const d = parseFloat(delays[i].value) * SCALE;
+            const r = parseFloat(rises[i].value) * SCALE;
+            const color = colors[i].value;
+            const y = i * Y_STEP + 50;
+
+            // Update global time offset based on delay
+            currentTimeX += d;
+
+            // 1. Label
+            xml += `<mxCell id="l_${i}" value="${railName}" style="text;html=1;align=right;verticalAlign=middle;fontColor=#ffffff;" vertex="1" parent="1">
+                        <mxGeometry x="0" y="${y}" width="80" height="${BAR_HEIGHT}" as="geometry"/>
+                    </mxCell>`;
+
+            // 2. The Rising Edge (Trapezoid/Polygon)
+            // We use a custom shape to show the ramp up
+            xml += `<mxCell id="b_${i}" value="" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=${color};strokeColor=none;rotation=0;" vertex="1" parent="1">
+                        <mxGeometry x="${currentTimeX}" y="${y}" width="${r + 150}" height="${BAR_HEIGHT}" as="geometry"/>
+                    </mxCell>`;
+            
+            // Increment the start time for the next rail to simulate sequential dependencies
+            currentTimeX += r; 
+        });
+
+        xml += `</root></mxGraphModel>`;
+        document.getElementById('output').value = xml;
+    }
+</script>
+
+</body>
+</html>
