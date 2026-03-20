@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Power-Up Designer (Cumulative Logic Fix)</title>
+    <title>Power-Up Designer (Corrected Cumulative Logic)</title>
     <style>
         :root { --bg: #121212; --panel: #1e1e1e; --accent: #00e676; --text: #cfd8dc; --break: #ff9800; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
@@ -12,7 +12,7 @@
         .item-card.break { border-left-color: var(--break); }
         label { display: block; font-size: 0.65rem; color: #888; margin-top: 10px; text-transform: uppercase; font-weight: bold; }
         input, select { background: #333; border: 1px solid #444; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; font-family: monospace; margin-top: 4px; }
-        .remove-btn { position: absolute; top: 10px; right: 10px; background: #444; color: #ff5252; border: none; cursor: pointer; width: 22px; height: 22px; border-radius: 50%; font-weight: bold; }
+        .remove-btn { position: absolute; top: 10px; right: 10px; background: #444; color: #ff5252; border: none; cursor: pointer; width: 22px; height: 22px; border-radius: 50%; font-weight: bold; z-index: 10; }
         .main { flex-grow: 1; background: #0a0a0a; overflow: auto; }
         #visualizer { min-width: 2500px; min-height: 1000px; }
         .btn-group { display: flex; gap: 8px; margin-top: 10px; }
@@ -60,8 +60,10 @@
 
     function updateVal(id, key, val) {
         const item = sequence.find(i => i.id === id);
-        item[key] = (typeof item[key] === 'string') ? val : (parseFloat(val) || 0);
-        render();
+        if (item) {
+            item[key] = (typeof item[key] === 'string') ? val : (parseFloat(val) || 0);
+            render();
+        }
     }
 
     function updateUI() {
@@ -79,8 +81,8 @@
             } else {
                 card.innerHTML = `<button class="remove-btn" onclick="removeItem('${item.id}')">✕</button>
                     <div style="font-weight:bold; color:var(--break); font-size:0.7rem">TIME BREAK (//)</div>
-                    <div style="display:flex;gap:5px"><div style="flex:1"><label>Hidden (ms)</label><input type="number" value="${item.duration}" oninput="updateVal('${item.id}', 'duration', this.value)"></div>
-                    <div style="flex:1"><label>Visual Px</label><input type="number" value="${item.visualWidth}" oninput="updateVal('${item.id}', 'visualWidth', this.value)"></div></div>`;
+                    <div style="display:flex;gap:5px"><div style="flex:1"><label>Duration (ms)</label><input type="number" value="${item.duration}" oninput="updateVal('${item.id}', 'duration', this.value)"></div>
+                    <div style="flex:1"><label>Width (px)</label><input type="number" value="${item.visualWidth}" oninput="updateVal('${item.id}', 'visualWidth', this.value)"></div></div>`;
             }
             list.appendChild(card);
         });
@@ -95,9 +97,8 @@
         svg.innerHTML = '';
         
         const SCALE = 5, LANE_H = 100, X_OFF = 160;
-        let visualCursorX = X_OFF; 
+        let globalX = X_OFF; // THE SOURCE OF TRUTH: tracks where the NEXT logic starts
         
-        // Dynamic Height based on rail count
         const railCount = sequence.filter(i => i.type === 'rail').length;
         const totalHeight = (railCount + 1) * LANE_H + 100;
         svg.setAttribute('height', totalHeight);
@@ -105,26 +106,29 @@
         let railIndex = 0;
         sequence.forEach((item) => {
             if (item.type === 'break') {
-                // Draw Break centered in the width
-                drawBreakLines(svg, visualCursorX, item.visualWidth, item.duration, totalHeight, colors.text, isBW);
-                visualCursorX += item.visualWidth; // Shift drawing cursor
+                // 1. Draw the break slashes
+                drawBreakLines(svg, globalX, item.visualWidth, item.duration, totalHeight, colors.text, isBW);
+                // 2. IMPORTANT: Update globalX so all future rails are shifted
+                globalX += item.visualWidth; 
             } else {
                 const yBase = (railIndex + 1) * LANE_H + 50;
-                const rStart = visualCursorX + (item.delay * SCALE);
+                // Start drawing from exactly where the last item (rail or break) left off
+                const rStart = globalX + (item.delay * SCALE);
                 const rEnd = rStart + (item.rise * SCALE);
                 const stroke = isBW ? "#000" : item.color;
                 
-                // Draw the trace from absolute start (left) to current position
+                // Signal Trace
                 svg.innerHTML += `<path d="M ${X_OFF},${yBase} L ${rStart},${yBase} L ${rEnd},${yBase-40} L 2800,${yBase-40}" 
                                    fill="none" stroke="${stroke}" stroke-width="3" stroke-linecap="round" />`;
                 
-                // Rail Name
+                // Label
                 svg.innerHTML += `<text x="15" y="${yBase-10}" fill="${stroke}" font-size="14" font-weight="bold">${item.name}</text>`;
                 
-                // Arrow
-                if (item.delay > 0) drawArrow(svg, visualCursorX, rStart, yBase-15, `${item.delay}ms`, colors.arrow);
+                // Timing Arrow (shows local delay between this rail and the previous sequence point)
+                if (item.delay > 0) drawArrow(svg, globalX, rStart, yBase-15, `${item.delay}ms`, colors.arrow);
                 
-                visualCursorX = rEnd; // Next item starts where this rise finished
+                // Update globalX for the next item in the sequence
+                globalX = rEnd; 
                 railIndex++;
             }
         });
@@ -134,21 +138,21 @@
         const midX = x + (width / 2);
         const rectFill = isBW ? "#fff" : "#0a0a0a";
         
-        // 1. Cut a hole in the grid for the break
+        // Clear background for the break
         svg.innerHTML += `<rect x="${x}" y="0" width="${width}" height="${height}" fill="${rectFill}" />`;
         
-        // 2. Draw slashes with consistent spacing
+        // Slashes centered in the gap
         for (let y = 10; y < height; y += 40) {
             svg.innerHTML += `
-                <line x1="${midX-10}" y1="${y+20}" x2="${midX+5}" y2="${y}" stroke="${color}" stroke-width="2.5" />
-                <line x1="${midX-2}" y1="${y+20}" x2="${midX+13}" y2="${y}" stroke="${color}" stroke-width="2.5" />
+                <line x1="${midX-12}" y1="${y+20}" x2="${midX+2}" y2="${y}" stroke="${color}" stroke-width="2.5" />
+                <line x1="${midX-4}" y1="${y+20}" x2="${midX+10}" y2="${y}" stroke="${color}" stroke-width="2.5" />
             `;
         }
         
-        // 3. Duration text Label
+        // Label with background rect to clear slashes
         svg.innerHTML += `
-            <rect x="${midX-30}" y="15" width="60" height="20" fill="${rectFill}" />
-            <text x="${midX}" y="30" fill="${color}" font-size="12" text-anchor="middle" font-weight="bold" font-family="monospace">${ms}ms</text>
+            <rect x="${midX-35}" y="12" width="70" height="22" fill="${rectFill}" />
+            <text x="${midX}" y="28" fill="${color}" font-size="12" text-anchor="middle" font-weight="bold" font-family="monospace">${ms}ms</text>
         `;
     }
 
