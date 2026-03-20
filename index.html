@@ -252,19 +252,32 @@
         svg.innerHTML += `<text x="${x}" y="${h - 5}" fill="${txtCol}" font-size="11" font-weight="bold" text-anchor="middle">${label}</text>`;
     }
 
-    function drawCurvyBreak(svg, x, width, ms, height, color, bg) {
-        const midX = x + (width / 2);
-        const curve = width / 3, gap = width / 5;
-        svg.innerHTML += `<rect x="${x}" y="0" width="${width}" height="${height}" fill="${bg}" />`;
-        const p = (off) => {
-            let d = `M ${off} 0`;
-            for (let y = 0; y < height; y += 100) d += ` C ${off + curve} ${y + 25}, ${off - curve} ${y + 75}, ${off} ${y + 100}`;
-            return d;
-        };
-        svg.innerHTML += `<path d="${p(midX-gap)}" stroke="${color}" stroke-width="2" fill="none" />
-                          <path d="${p(midX+gap)}" stroke="${color}" stroke-width="2" fill="none" />
-                          <text x="${midX}" y="50" fill="${color}" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">${ms}ms</text>`;
-    }
+function drawCurvyBreak(svg, x, width, ms, height, color, bg) {
+    const midX = x + (width / 2);
+    const curve = width / 3, gap = width / 5;
+    
+    // 1. Clear the area behind the curves
+    svg.innerHTML += `<rect x="${x}" y="0" width="${width}" height="${height}" fill="${bg}" />`;
+    
+    const p = (off) => {
+        let d = `M ${off} 0`;
+        for (let y = 0; y < height; y += 100) d += ` C ${off + curve} ${y + 25}, ${off - curve} ${y + 75}, ${off} ${y + 100}`;
+        return d;
+    };
+
+    // 2. Draw the Bezier curves
+    svg.innerHTML += `<path d="${p(midX-gap)}" stroke="${color}" stroke-width="2" fill="none" />
+                      <path d="${p(midX+gap)}" stroke="${color}" stroke-width="2" fill="none" />`;
+    
+    // 3. The Guard: Rectangle background for text readability
+    // We place this after the signal lines are drawn (which happens in the render loop)
+    // so it properly masks the signals passing through the break.
+    const textWidth = ms.toString().length * 8 + 20; // Dynamic width based on digits
+    svg.innerHTML += `
+        <rect x="${midX - (textWidth/2)}" y="35" width="${textWidth}" height="20" fill="${bg}" rx="4" />
+        <text x="${midX}" y="50" fill="${color}" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">${ms}ms</text>
+    `;
+}
 
     function drawArrow(svg, x1, x2, y, txt, col) {
         svg.innerHTML += `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${col}" stroke-width="1.5" />
