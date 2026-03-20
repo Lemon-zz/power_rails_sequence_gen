@@ -3,27 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Power-Up Sequence Designer</title>
+    <title>Power-Up Sequence Designer v2.0</title>
     <style>
         :root { --bg: #121212; --panel: #1e1e1e; --accent: #00e676; --text: #cfd8dc; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
+        /* Sidebar */
         .sidebar { width: 400px; background: var(--panel); border-right: 1px solid #333; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; overflow-y: auto; }
-        h2 { color: var(--accent); font-size: 1.1rem; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        h2 { color: var(--accent); font-size: 1.1rem; margin: 0 0 15px 0; border-bottom: 1px solid #333; padding-bottom: 10px; }
         
-        .rail-card { background: #252525; border-radius: 6px; padding: 12px; margin-bottom: 15px; border-left: 4px solid var(--accent); position: relative; }
+        .rail-card { background: #252525; border-radius: 6px; padding: 12px; margin-bottom: 12px; border-left: 4px solid var(--accent); position: relative; }
         label { display: block; font-size: 0.7rem; color: #888; margin-top: 8px; text-transform: uppercase; font-weight: bold; }
-        input, select { background: #333; border: 1px solid #444; color: white; padding: 6px; border-radius: 4px; width: 100%; box-sizing: border-box; font-family: monospace; margin-top: 2px; }
+        input, select { background: #333; border: 1px solid #444; color: white; padding: 6px; border-radius: 4px; width: 100%; box-sizing: border-box; font-family: monospace; }
         
-        .main { flex-grow: 1; display: flex; flex-direction: column; background: #0a0a0a; position: relative; overflow: auto; }
-        #visualizer { min-width: 1200px; min-height: 800px; transition: background 0.3s; }
+        /* Main View */
+        .main { flex-grow: 1; display: flex; flex-direction: column; background: #0a0a0a; overflow: auto; position: relative; }
+        #visualizer { min-width: 1500px; min-height: 800px; }
         
-        /* Datasheet Mode Toggle */
-        .toggle-container { background: #2d2d2d; padding: 10px; border-radius: 4px; margin-bottom: 15px; border: 1px solid #444; display: flex; align-items: center; gap: 10px; cursor: pointer; }
-        .toggle-container input { width: auto; }
-
-        button { background: var(--accent); color: #000; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        button.secondary { background: #444; color: #fff; }
+        .toggle-container { background: #2d2d2d; padding: 10px; border-radius: 4px; margin-bottom: 15px; border: 1px solid #444; display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 0.8rem; }
+        button { background: var(--accent); color: #000; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px; width: 100%; }
+        button.secondary { background: #444; color: #fff; margin-top: 5px; }
         .remove-btn { position: absolute; top: 5px; right: 5px; background: none; color: #ff5252; border:none; cursor:pointer; font-size: 18px; }
     </style>
 </head>
@@ -104,9 +103,8 @@
         const svg = document.getElementById('visualizer');
         const isBW = document.getElementById('datasheetMode').checked;
         
-        // Colors based on mode
         const bgColor = isBW ? "#ffffff" : "#0a0a0a";
-        const gridColor = isBW ? "#eeeeee" : "#222222";
+        const gridColor = isBW ? "#dddddd" : "#222222";
         const textColor = isBW ? "#000000" : "#888888";
         const arrowColor = isBW ? "#333333" : "#ffea00";
 
@@ -118,37 +116,56 @@
         const SIG_H = 35;
         const X_OFF = 150;
         const railPos = {};
+        const milestones = [];
 
-        // Grid
+        // 1. Draw Grid Lines
         for(let t=0; t<2000; t+=50) {
             let x = t * SCALE_X + X_OFF;
             svg.innerHTML += `<line x1="${x}" y1="0" x2="${x}" y2="100%" stroke="${gridColor}" stroke-width="1" />`;
-            if (t % 100 === 0) svg.innerHTML += `<text x="${x}" y="15" fill="${textColor}" font-size="10" text-anchor="middle">${t}ms</text>`;
+            if (t % 100 === 0) svg.innerHTML += `<text x="${x}" y="20" fill="${textColor}" font-size="10" text-anchor="middle">${t}ms</text>`;
         }
 
+        // 2. Process Rails
         rails.forEach((rail, i) => {
-            const yBase = (i + 1) * LANE_H + 40;
+            const yBase = (i + 1) * LANE_H + 50;
             const yHigh = yBase - SIG_H;
             let startX = X_OFF;
-            if (rail.parent !== 'none' && railPos[rail.parent]) startX = railPos[rail.parent].stableX;
+            
+            if (rail.parent !== 'none' && railPos[rail.parent]) {
+                startX = railPos[rail.parent].stableX;
+            }
 
             const rStart = startX + (rail.delay * SCALE_X);
             const rEnd = rStart + (rail.rise * SCALE_X);
             railPos[rail.id] = { stableX: rEnd, y: yBase };
+            
+            // Add to Milestones (T markers)
+            milestones.push({ x: rEnd, label: `T${i}` });
 
-            // Arrows & Dashed Lines
+            // Arrows & Dashed Ref Lines
             if (rail.parent !== 'none' && rail.delay > 0) {
                 drawArrow(svg, startX, rStart, yBase - 15, `${rail.delay}ms`, arrowColor);
                 svg.innerHTML += `<line x1="${startX}" y1="${railPos[rail.parent].y}" x2="${startX}" y2="${yBase}" stroke="${isBW?'#999':'#444'}" stroke-dasharray="3"/>`;
                 svg.innerHTML += `<line x1="${rStart}" y1="${yBase-25}" x2="${rStart}" y2="${yBase}" stroke="${isBW?'#999':'#444'}" stroke-dasharray="3"/>`;
             }
 
-            // Signal Line
+            // Signal Path
             const strokeColor = isBW ? "#000000" : rail.color;
             const pathData = `M ${X_OFF},${yBase} L ${rStart},${yBase} L ${rEnd},${yHigh} L 1800,${yHigh}`;
             svg.innerHTML += `
                 <text x="10" y="${yBase - 5}" fill="${strokeColor}" font-size="12" font-weight="bold">${rail.name}</text>
-                <path d="${pathData}" fill="none" stroke="${strokeColor}" stroke-width="${isBW?2:2.5}" />
+                <path d="${pathData}" fill="none" stroke="${strokeColor}" stroke-width="${isBW?2:2.5}" stroke-linejoin="round"/>
+            `;
+        });
+
+        // 3. Draw Timing Markers at the bottom
+        const markerY = (rails.length + 1) * LANE_H + 100;
+        svg.innerHTML += `<line x1="${X_OFF}" y1="${markerY}" x2="1800" y2="${markerY}" stroke="${textColor}" stroke-width="1" />`;
+        
+        milestones.forEach((m, idx) => {
+            svg.innerHTML += `
+                <line x1="${m.x}" y1="${markerY - 5}" x2="${m.x}" y2="${markerY + 5}" stroke="${textColor}" stroke-width="2" />
+                <text x="${m.x}" y="${markerY + 20}" fill="${textColor}" font-size="12" font-weight="bold" text-anchor="middle">${m.label}</text>
             `;
         });
     }
@@ -164,15 +181,11 @@
 
     function exportSVG() {
         const svg = document.getElementById('visualizer');
-        const serializer = new XMLSerializer();
-        let source = serializer.serializeToString(svg);
-        if(!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
-            source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
-        }
+        const source = new XMLSerializer().serializeToString(svg);
         const blob = new Blob([source], {type: 'image/svg+xml;charset=utf-8'});
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = 'power_sequence.svg';
+        link.download = 'power_sequence_milestones.svg';
         link.click();
     }
 
