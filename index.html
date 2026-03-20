@@ -2,31 +2,40 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Power-Up Designer v3.9</title>
+    <title>Power-Up Designer v4.0</title>
     <style>
-        :root { --bg: #121212; --panel: #1e1e1e; --accent: #00e676; --text: #cfd8dc; --break: #ff9800; }
+        :root { --bg: #121212; --panel: #1e1e1e; --accent: #00e676; --text: #cfd8dc; --break: #ff9800; --down: #ff5252; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         .sidebar { width: 380px; background: var(--panel); border-right: 1px solid #333; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; overflow-y: auto; }
         h2 { color: var(--accent); font-size: 1.1rem; margin: 0 0 15px 0; border-bottom: 1px solid #333; padding-bottom: 10px; font-weight: 800; }
         .item-card { background: #252525; border-radius: 6px; padding: 15px; margin-bottom: 12px; border-left: 4px solid var(--accent); position: relative; }
         .item-card.break { border-left-color: var(--break); }
+        .item-card.powerdown { border-left-color: var(--down); }
         label { display: block; font-size: 0.65rem; color: #888; margin-top: 10px; text-transform: uppercase; font-weight: bold; }
         input, select { background: #333; border: 1px solid #444; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; font-family: monospace; margin-top: 4px; }
         .remove-btn { position: absolute; top: 10px; right: 10px; background: #444; color: #ff5252; border: none; cursor: pointer; width: 22px; height: 22px; border-radius: 50%; font-weight: bold; }
-        .main { flex-grow: 1; background: #0a0a0a; overflow: auto; scroll-behavior: smooth; }
+        .main { flex-grow: 1; background: #0a0a0a; overflow: auto; }
         #visualizer { display: block; }
         .btn-group { display: flex; gap: 8px; margin-top: 10px; position: sticky; bottom: 0; background: var(--panel); padding-top: 10px; flex-wrap: wrap; }
         button { border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; flex: 1 1 45%; }
         .btn-rail { background: var(--accent); color: #000; }
         .btn-break { background: var(--break); color: #000; }
         .btn-export { background: #2196f3; color: white; flex: 1 1 100%; margin-top: 10px; }
-        .toggle-container { background: #2d2d2d; padding: 12px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #444; display: flex; align-items: center; gap: 12px; font-size: 0.8rem; cursor: pointer; }
+        .toggle-container { background: #2d2d2d; padding: 10px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #444; display: flex; align-items: center; gap: 12px; font-size: 0.75rem; cursor: pointer; }
+        .mode-indicator { font-weight: 900; padding: 4px 8px; border-radius: 4px; margin-bottom: 15px; text-align: center; }
+        .up { background: rgba(0, 230, 118, 0.2); color: var(--accent); }
+        .down { background: rgba(255, 82, 82, 0.2); color: var(--down); }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
     <h2>[ SEQUENCE_EDITOR ]</h2>
+    <div id="modeStatus" class="mode-indicator up">MODE: POWER UP</div>
+    <label class="toggle-container">
+        <input type="checkbox" id="powerDownMode" onchange="toggleMode()"> 
+        <span>REVERSE LOGIC (POWER DOWN)</span>
+    </label>
     <label class="toggle-container">
         <input type="checkbox" id="datasheetMode" onchange="render()"> 
         <span>DATASHEET MODE (B&W)</span>
@@ -47,6 +56,14 @@
         { type: 'break', id: 'b1', duration: 300, visualWidth: 40 },
         { type: 'rail', id: 'r2', name: '3V3_SYS', delay: 20, rise: 10, color: '#81c784', parentId: 'r1' }
     ];
+
+    function toggleMode() {
+        const isDown = document.getElementById('powerDownMode').checked;
+        const status = document.getElementById('modeStatus');
+        status.innerText = isDown ? "MODE: POWER DOWN" : "MODE: POWER UP";
+        status.className = `mode-indicator ${isDown ? 'down' : 'up'}`;
+        render();
+    }
 
     function addItem(type) {
         const id = 'id' + Math.random().toString(36).substr(2, 5);
@@ -85,9 +102,9 @@
                     <input type="text" value="${item.name}" oninput="updateVal('${item.id}', 'name', this.value)">
                     <div style="display:flex;gap:5px">
                         <div style="flex:1"><label>Delay</label><input type="number" value="${item.delay}" oninput="updateVal('${item.id}', 'delay', this.value)"></div>
-                        <div style="flex:1"><label>Rise</label><input type="number" value="${item.rise}" oninput="updateVal('${item.id}', 'rise', this.value)"></div>
+                        <div style="flex:1"><label>Rise/Fall</label><input type="number" value="${item.rise}" oninput="updateVal('${item.id}', 'rise', this.value)"></div>
                     </div>
-                    <label>Parent Rail</label><select onchange="updateVal('${item.id}', 'parentId', this.value, true)">${options}</select>
+                    <label>Trigger Parent</label><select onchange="updateVal('${item.id}', 'parentId', this.value, true)">${options}</select>
                     <label>Color</label><input type="color" value="${item.color}" oninput="updateVal('${item.id}', 'color', this.value)">`;
             } else {
                 card.innerHTML = `<button class="remove-btn" onclick="removeItem('${item.id}')">✕</button>
@@ -104,8 +121,17 @@
 
     function render() {
         const svg = document.getElementById('visualizer');
+        const isDown = document.getElementById('powerDownMode').checked;
         const isBW = document.getElementById('datasheetMode').checked;
-        const colors = { bg: isBW?"#fff":"#0a0a0a", text: isBW?"#333":"#888", arrow: isBW?"#444":"#ffea00", marker: isBW?"#bbb":"#333", markerText: isBW?"#000":"#00e676" };
+        
+        const colors = { 
+            bg: isBW ? "#fff" : "#0a0a0a", 
+            text: isBW ? "#333" : "#888", 
+            arrow: isBW ? "#444" : (isDown ? "#ff5252" : "#ffea00"), 
+            marker: isBW ? "#bbb" : "#333", 
+            markerText: isBW ? "#000" : (isDown ? "#ff5252" : "#00e676") 
+        };
+
         svg.style.background = colors.bg;
         svg.innerHTML = '';
         
@@ -120,7 +146,7 @@
             if (item.type === 'break') {
                 breakList.push({ x: globalTimelineX, width: item.visualWidth, ms: item.duration });
                 globalTimelineX += item.visualWidth;
-                if (globalTimelineX > maxReachedX) maxReachedX = globalTimelineX;
+                maxReachedX = Math.max(maxReachedX, globalTimelineX);
             } else {
                 const y = (railIndex + 1) * LANE_H + 50;
                 let anchorX = globalTimelineX;
@@ -130,42 +156,55 @@
                 
                 railGeometries[item.id] = { y, start, end, name: item.name, color: isBW ? "#000" : item.color, anchorX, delay: item.delay, parentId: item.parentId };
                 globalTimelineX = end;
-                if (end > maxReachedX) maxReachedX = end;
+                maxReachedX = Math.max(maxReachedX, end);
                 railIndex++;
             }
         });
 
-        // Update SVG dimensions dynamically
-        const totalWidth = maxReachedX + 200; // Add 200px buffer at the end
+        const totalWidth = maxReachedX + 200;
         const totalHeight = (railIndex + 1) * LANE_H + 50;
         svg.setAttribute('width', totalWidth);
         svg.setAttribute('height', totalHeight);
 
-        // 1. Global Markers
+        // 1. Markers
         Object.values(railGeometries).forEach((g, i) => drawGlobalMarker(svg, g.start, totalHeight, `T${i}`, colors.marker, colors.markerText));
 
         // 2. Traces
         Object.values(railGeometries).forEach(g => {
-            // "Off" line starts at X_OFF, goes to start, ramps to end, then stays "On" until totalWidth
-            const path = `M ${X_OFF},${g.y} L ${g.start},${g.y} L ${g.end},${g.y-40} L ${totalWidth},${g.y-40}`;
+            let path;
+            if (isDown) {
+                // Power Down: Start High, Ramp down to Low
+                path = `M ${X_OFF},${g.y-40} L ${g.start},${g.y-40} L ${g.end},${g.y} L ${totalWidth},${g.y}`;
+            } else {
+                // Power Up: Start Low, Ramp up to High
+                path = `M ${X_OFF},${g.y} L ${g.start},${g.y} L ${g.end},${g.y-40} L ${totalWidth},${g.y-40}`;
+            }
+            
             svg.innerHTML += `<path d="${path}" fill="none" stroke="${g.color}" stroke-width="3" stroke-linecap="round" />`;
             svg.innerHTML += `<text x="15" y="${g.y-10}" fill="${g.color}" font-size="14" font-weight="bold" font-family="Arial">${g.name}</text>`;
             
+            // Dependency Links
             if (g.parentId !== 'none' && railGeometries[g.parentId]) {
                 const parent = railGeometries[g.parentId];
-                svg.innerHTML += `<line x1="${g.anchorX}" y1="${parent.y - 40}" x2="${g.anchorX}" y2="${g.y - 15}" stroke="${colors.arrow}" stroke-width="1" stroke-dasharray="3,3" />`;
+                const yFrom = isDown ? parent.y : parent.y - 40;
+                const yTo = isDown ? g.y - 40 : g.y - 15;
+                svg.innerHTML += `<line x1="${g.anchorX}" y1="${yFrom}" x2="${g.anchorX}" y2="${yTo}" stroke="${colors.arrow}" stroke-width="1" stroke-dasharray="3,3" opacity="0.6" />`;
             }
-            if (g.delay > 0) drawArrow(svg, g.anchorX, g.start, g.y-15, `${g.delay}ms`, colors.arrow);
+            
+            if (g.delay > 0) {
+                const yPos = isDown ? g.y - 45 : g.y - 15;
+                drawArrow(svg, g.anchorX, g.start, yPos, `${g.delay}ms`, colors.arrow);
+            }
         });
 
-        // 3. Breaks (Drawn on top to mask signal lines)
+        // 3. Breaks
         breakList.forEach(b => drawCurvyBreak(svg, b.x, b.width, b.ms, totalHeight, colors.text, colors.bg));
     }
 
     function drawGlobalMarker(svg, x, h, label, col, txtCol) {
         svg.innerHTML += `<line x1="${x}" y1="40" x2="${x}" y2="${h - 20}" stroke="${col}" stroke-width="1" stroke-dasharray="4,4" />`;
-        svg.innerHTML += `<text x="${x}" y="30" fill="${txtCol}" font-size="11" font-weight="bold" font-family="monospace" text-anchor="middle">${label}</text>`;
-        svg.innerHTML += `<text x="${x}" y="${h - 5}" fill="${txtCol}" font-size="11" font-weight="bold" font-family="monospace" text-anchor="middle">${label}</text>`;
+        svg.innerHTML += `<text x="${x}" y="30" fill="${txtCol}" font-size="11" font-weight="bold" text-anchor="middle">${label}</text>`;
+        svg.innerHTML += `<text x="${x}" y="${h - 5}" fill="${txtCol}" font-size="11" font-weight="bold" text-anchor="middle">${label}</text>`;
     }
 
     function drawCurvyBreak(svg, x, width, ms, height, color, bg) {
