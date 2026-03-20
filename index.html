@@ -93,32 +93,39 @@
         svg.innerHTML = '';
         
         const SCALE = 5, LANE_H = 100, X_OFF = 160;
-        let currentX = X_OFF; // Shared global cursor
+        let currentX = X_OFF; // Shared global cursor for the sequence timeline
         
         const railCount = sequence.filter(i => i.type === 'rail').length;
         const totalHeight = (railCount + 1) * LANE_H + 100;
         svg.setAttribute('height', totalHeight);
 
+        // We use a separate pass to draw the "pre-history" lines for all rails 
+        // so that breaks cut through them consistently.
         let railIndex = 0;
-        // Logic: Iterate through the sequence in ORDER. 
-        // Every item shifts currentX for the items that follow it.
+        
         sequence.forEach((item) => {
             if (item.type === 'break') {
                 drawCurvyBreak(svg, currentX, item.visualWidth, item.duration, totalHeight, colorText);
-                currentX += item.visualWidth; // Shift EVERYTHING to the right
+                currentX += item.visualWidth; 
             } else {
                 const yBase = (railIndex + 1) * LANE_H + 50;
                 const rStart = currentX + (item.delay * SCALE);
                 const rEnd = rStart + (item.rise * SCALE);
                 
-                // Draw Trace: always start from X_OFF but include cumulative currentX offsets
-                svg.innerHTML += `<path d="M ${X_OFF},${yBase} L ${rStart},${yBase} L ${rEnd},${yBase-40} L 2800,${yBase-40}" 
-                                   fill="none" stroke="${item.color}" stroke-width="3" stroke-linecap="round" />`;
+                // 1. Draw the signal line. 
+                // It starts at X_OFF, but the BREAK logic will have already cleared the 
+                // background under the curves, making the line look "broken".
+                svg.innerHTML += `
+                    <path d="M ${X_OFF},${yBase} L ${rStart},${yBase} L ${rEnd},${yBase-40} L 2800,${yBase-40}" 
+                          fill="none" stroke="${item.color}" stroke-width="3" stroke-linecap="round" />`;
                 
+                // 2. Rail Label
                 svg.innerHTML += `<text x="15" y="${yBase-10}" fill="${item.color}" font-size="14" font-weight="bold">${item.name}</text>`;
+                
+                // 3. Arrow logic relative to current sequence point
                 if (item.delay > 0) drawArrow(svg, currentX, rStart, yBase-15, `${item.delay}ms`, "#ffea00");
                 
-                currentX = rEnd; // Next item in sequence starts after this rise
+                currentX = rEnd; 
                 railIndex++;
             }
         });
