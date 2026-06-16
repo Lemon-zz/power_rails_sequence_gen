@@ -8,81 +8,136 @@
     <meta name="title" content="Power-Up sequence Designer | Hardware Timing & Sequence Diagram Tool">
     <meta name="description" content="Power-up/Power-down sequence free online tool. Create yours power diagrams fast and clean">
     <meta name="keywords" content="power up sequence generator, power-up sequence, power timing diagram generator, hardware engineering tool, voltage rail sequencer, PCB design, power-down sequence, SVG export, electronics design">
-    <meta name="author" content="Lemon_ZZ">
+    <meta name="author" content="Lemon_ZZ, Kristian Bergh">
     <meta name="google-site-verification" content="MnsxTW7zOf2yAo_K5zL9RxRQOgJUUEcF4PJg9DmITDU" />
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://github.com/Lemon-zz/power_rails_sequence_gen"> <meta property="og:title" content="Power-Up Sequence Designer">
     <meta property="og:description" content="Design power sequences in seconds. Features Tn markers, power-down cloning, and vector SVG export.">
 
-    <link rel="canonical" href="https://github.com/Lemon-zz/power_rails_sequence_gen">
-
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "Power-Up Designer",
-      "description": "A web-based utility for designing and exporting power-up and power-down timing sequences for hardware engineering.",
-      "applicationCategory": "DesignApplication, EngineeringTool",
-      "operatingSystem": "Any",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "Dynamic Power-Up/Down Sequencing",
-        "Automatic Tn Marker Generation",
-        "Vector SVG Export",
-        "Datasheet Print Mode",
-        "Dependency Tracking"
-      ]
-    }
-    </script>
     <style>
         :root { --bg: #121212; --panel: #1e1e1e; --accent: #00e676; --text: #cfd8dc; --break: #ff9800; --down: #ff5252; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 380px; background: var(--panel); border-right: 1px solid #333; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        .sidebar { width: 380px; background: var(--panel); border-right: 1px solid #333; display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; overflow-y: auto; flex-shrink: 0; }
         h2 { color: var(--accent); font-size: 1.1rem; margin: 0; border-bottom: 1px solid #333; padding-bottom: 10px; font-weight: 800; }
-        .item-card { background: #252525; border-radius: 6px; padding: 15px; margin-bottom: 12px; border-left: 4px solid var(--accent); position: relative; }
+        
+        .item-card { background: #252525; border-radius: 6px; padding: 8px 10px 10px 10px; margin-bottom: 8px; border-left: 4px solid var(--accent); position: relative; transition: opacity 0.2s; }
         .item-card.break { border-left-color: var(--break); }
-        label { display: block; font-size: 0.65rem; color: #888; margin-top: 10px; text-transform: uppercase; font-weight: bold; }
-        input, select { background: #333; border: 1px solid #444; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; font-family: monospace; margin-top: 4px; }
-        .remove-btn { position: absolute; top: 10px; right: 10px; background: #444; color: #ff5252; border: none; cursor: pointer; width: 22px; height: 22px; border-radius: 50%; font-weight: bold; }
-        .main { flex-grow: 1; background: #0a0a0a; overflow: auto; }
-        #visualizer { display: block; }
-        .btn-group { display: flex; gap: 8px; margin-top: 10px; position: sticky; bottom: 0; background: var(--panel); padding-top: 10px; flex-wrap: wrap; }
-        button { border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; flex: 1 1 45%; font-size: 0.75rem; }
+        label { display: block; font-size: 0.6rem; color: #888; margin-top: 6px; margin-bottom: 2px; text-transform: uppercase; font-weight: bold; }
+        input[type="text"], input[type="number"], select { background: #333; border: 1px solid #444; color: white; padding: 4px 6px; border-radius: 4px; width: 100%; box-sizing: border-box; font-family: monospace; font-size: 0.75rem; }
+        
+        .card-controls { position: absolute; top: 6px; right: 6px; display: flex; gap: 4px; }
+        .icon-btn { background: #444; color: #fff; border: none; cursor: pointer; width: 22px; height: 22px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; padding: 0; }
+        .icon-btn:hover { background: #555; }
+        .icon-btn.remove { color: #ff5252; }
+        
+        .main { flex-grow: 1; background: #0a0a0a; overflow: auto; position: relative; }
+        #visualizer { display: block; min-width: 100%; }
+        
+        .btn-group { display: flex; gap: 6px; margin-top: 10px; position: sticky; bottom: 0; background: var(--panel); padding-top: 10px; flex-wrap: wrap; }
+        button { border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold; flex: 1 1 45%; font-size: 0.75rem; }
         .btn-rail { background: var(--accent); color: #000; }
         .btn-break { background: var(--break); color: #000; }
         .btn-clone { background: #9c27b0; color: white; flex: 1 1 100%; }
         .btn-export { background: #2196f3; color: white; flex: 1 1 100%; }
-        .toggle-container { background: #2d2d2d; padding: 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #444; display: flex; align-items: center; gap: 12px; font-size: 0.75rem; cursor: pointer; }
-        .mode-indicator { font-weight: 900; padding: 6px; border-radius: 4px; margin: 10px 0; text-align: center; font-size: 0.8rem; }
+        .btn-save { background: #00b0ff; color: #000; flex: 1 1 45%; }
+        .btn-load { background: #ffb300; color: #000; flex: 1 1 45%; }
+        
+        #configFileName { flex: 1 1 100%; text-align: center; font-weight: bold; font-size: 0.8rem; margin-top: 4px; margin-bottom: 2px; color: #fff; background: #2d2d2d; border: 1px solid #555; padding: 6px; }
+        #configFileName:focus { border-color: #00b0ff; outline: none; }
+        .toggle-container { background: #2d2d2d; padding: 8px; border-radius: 6px; margin-bottom: 6px; border: 1px solid #444; display: flex; align-items: center; gap: 12px; font-size: 0.75rem; cursor: pointer; }
+        .mode-indicator { font-weight: 900; padding: 6px; border-radius: 4px; margin: 10px 0 6px 0; text-align: center; font-size: 0.8rem; }
         .up { background: rgba(0, 230, 118, 0.15); color: var(--accent); border: 1px solid var(--accent); }
         .down { background: rgba(255, 82, 82, 0.15); color: var(--down); border: 1px solid var(--down); }
+
+        #colorPopup { display: none; position: absolute; z-index: 1000; background: #222; border: 1px solid #555; padding: 12px; border-radius: 6px; box-shadow: 0 8px 24px rgba(0,0,0,0.8); width: 170px; }
+        .color-swatch { width: 18px; height: 18px; border-radius: 3px; cursor: pointer; border: 1px solid rgba(0,0,0,0.5); }
+        .color-swatch:hover { transform: scale(1.1); border-color: #fff; }
     </style>
 </head>
 <body>
+
+<datalist id="presetColors"></datalist>
+
+<div id="colorPopup">
+    <label style="display:flex; align-items:center; gap:6px; color:#fff; font-size:0.75rem; margin-bottom:10px; cursor:pointer; font-weight:bold;">
+        <input type="checkbox" id="popupAutoToggle" onchange="toggleAutoColor()"> Auto Color Assignment
+    </label>
+    <div style="font-size:0.6rem; color:#888; margin-bottom:4px; text-transform:uppercase;">Presets (Hue x Shade)</div>
+    <div id="popupGrid" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:4px; margin-bottom:10px;"></div>
+    
+    <div style="border-top:1px solid #444; padding-top:8px; margin-bottom:8px;">
+        <label style="font-size:0.65rem; color:#ccc; margin:0 0 4px 0;">Shading Slider (Lightness):</label>
+        <input type="range" id="popupShadeSlider" min="0" max="100" step="1" oninput="adjustShading(this.value)" style="width:100%; margin:0; padding:0;">
+    </div>
+    
+    <div style="border-top:1px solid #444; padding-top:8px;">
+        <label style="font-size:0.65rem; color:#ccc; margin:0 0 4px 0;">Custom Hex Override:</label>
+        <input type="color" id="popupCustom" onchange="setCustomColor(this.value)" style="width:100%; height:24px; padding:0; border:none; cursor:pointer;">
+    </div>
+</div>
 
 <div class="sidebar">
     <h2>[ POWER_SEQUENCE_EDITOR ]</h2>
     <div id="modeStatus" class="mode-indicator up">MODE: POWER UP</div>
     
-    <label class="toggle-container">
-        <input type="checkbox" id="powerDownMode" onchange="toggleMode()"> 
-        <span>REVERSE LOGIC (DOWN)</span>
-    </label>
-    <label class="toggle-container">
-        <input type="checkbox" id="datasheetMode" onchange="render()"> 
-        <span>B&W MODE</span>
-    </label>
+    <div style="display:flex; gap:6px; margin-bottom:6px;">
+        <label class="toggle-container" style="flex:1; margin:0; padding:6px; justify-content:center;">
+            <input type="checkbox" id="powerDownMode" onchange="toggleMode()"> 
+            <span style="font-size:0.6rem; letter-spacing:-0.5px;">DOWN MODE</span>
+        </label>
+        <label class="toggle-container" style="flex:1; margin:0; padding:6px; justify-content:center;">
+            <input type="checkbox" id="datasheetMode" onchange="render()"> 
+            <span style="font-size:0.6rem; letter-spacing:-0.5px;">B&W MODE</span>
+        </label>
+    </div>
+    
+    <div style="display:flex; gap:4px; margin-bottom:8px;">
+        <select id="colorAlgo" onchange="recalcAutoOnly()" style="flex:1.5; margin:0; background:#2d2d2d; color:#fff; border:1px solid #444; border-radius:4px; font-size:0.6rem; padding:4px;">
+            <option value="adjacency">1. Adjacency Max</option>
+            <option value="size">2. Size-Weighted</option>
+            <option value="rainbow">3. Rainbow Cascade</option>
+            <option value="scatter">4. Leaf Scatter</option>
+            <option value="warm">5. Warm Tones</option>
+            <option value="cool">6. Cool Tones</option>
+            <option value="mono_blue">7. Mono Blue</option>
+            <option value="mono_red">8. Mono Red</option>
+            <option value="alternator">9. Alternator</option>
+            <option value="random">10. Randomize</option>
+        </select>
+        <button onclick="recalcAutoOnly()" style="flex:1; background:#00b0ff; color:#000; border:none; border-radius:4px; font-size:0.55rem; font-weight:bold; cursor:pointer; padding:4px;" title="Re-roll algo only on Auto traces">🔄 REROLL</button>
+        <button onclick="forceInheritColor()" style="flex:1; background:#4caf50; color:#fff; border:none; border-radius:4px; font-size:0.55rem; font-weight:bold; cursor:pointer; padding:4px;" title="Force Auto traces to inherit parent color">🔗 INHERIT</button>
+        <button onclick="forceAutoColorAll()" style="flex:1; background:#9c27b0; color:#fff; border:none; border-radius:4px; font-size:0.55rem; font-weight:bold; cursor:pointer; padding:4px;" title="Force ALL items back to Auto-Color">🎨 ALL AUTO</button>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+        <label class="toggle-container" style="margin:0; padding:6px 10px; flex-shrink:0;">
+            <input type="checkbox" id="autoScaleX" checked onchange="document.getElementById('zoomPct').value = 100; render();"> 
+            <span>AUTO FIT</span>
+        </label>
+        <div style="display:flex; align-items:center; gap:4px; flex:1; background:#2d2d2d; border:1px solid #444; border-radius:6px; padding:4px 8px;">
+            <label style="margin:0; font-size:0.65rem; color:#ccc;">Zoom:</label>
+            <input type="number" id="zoomPct" value="100" min="10" step="10" oninput="document.getElementById('autoScaleX').checked = false; render(true);" style="margin:0; text-align:right; border:none; background:transparent; padding:0; font-size:0.8rem; flex:1;">
+            <span style="font-size:0.8rem; font-weight:bold; color:#888;">%</span>
+        </div>
+    </div>
 
     <div id="itemList"></div>
 
     <div class="btn-group">
         <button class="btn-rail" onclick="addItem('rail')">+ RAIL</button>
         <button class="btn-break" onclick="addItem('break')">+ BREAK</button>
-        <button class="btn-clone" onclick="cloneToPowerDown()">🔄 CLONE TO POWER DOWN</button>
+        
+        <input type="text" id="configFileName" value="Randomfish_A1.json" title="Config File Name" />
+        
+        <button class="btn-save" onclick="saveConfig()">💾 SAVE CONFIG</button>
+        <input type="file" id="configFile" accept=".json" style="display: none;" onchange="loadConfig(event)">
+        <button class="btn-load" onclick="document.getElementById('configFile').click()">📂 LOAD CONFIG</button>
+        
+        <div style="display:flex; gap:6px; flex: 1 1 100%;">
+            <button class="btn-clone" onclick="cloneToPowerDownFlat()" style="flex:1; font-size:0.6rem; padding:8px 4px;" title="Reverse all rails into a single flat chain">🔄 CLONE PD - FLAT</button>
+            <button class="btn-clone" onclick="cloneToPowerDownGroups()" style="flex:1; font-size:0.6rem; padding:8px 4px;" title="Reverse PSEQ leaders, keeping groups intact">🔄 CLONE PD - GROUPS</button>
+        </div>
+        
         <button class="btn-export" onclick="exportSVG()">💾 EXPORT TO SVG</button>
     </div>
 </div>
@@ -90,26 +145,418 @@
 <div class="main"><svg id="visualizer" xmlns="http://www.w3.org/2000/svg"></svg></div>
 
 <script>
-    let sequence = [
-        { type: 'rail', id: 'r1', name: '12V_VIN', delay: 0, rise: 5, color: '#4fc3f7', parentId: 'none' },
-        { type: 'rail', id: 'r2', name: '3V3_SYS', delay: 20, rise: 10, color: '#81c784', parentId: 'r1' },
-        { type: 'rail', id: 'r3', name: '1V8_CORE', delay: 15, rise: 8, color: '#ffb74d', parentId: 'r2' }
+    const PALETTE_MATRIX = [
+        ['#FF8A80', '#FF5252', '#FF0000', '#C50000', '#8B0000'], 
+        ['#FFE57F', '#FFD180', '#FF9100', '#FF6D00', '#E65100'], 
+        ['#B9F6CA', '#69F0AE', '#00E676', '#00C853', '#1B5E20'], 
+        ['#84FFFF', '#18FFFF', '#00E5FF', '#00B8D4', '#006064'], 
+        ['#82B1FF', '#448AFF', '#2979FF', '#2962FF', '#0D47A1'], 
+        ['#B388FF', '#7C4DFF', '#651FFF', '#6200EA', '#311B92'], 
+        ['#FFB6C1', '#FF80AB', '#FF4081', '#F50057', '#C51162']  
     ];
+
+    let sequence = [
+        { type: 'rail', id: 'r1', name: '12V_VIN', delay: 0, rise: 5, color: PALETTE_MATRIX[5][2], colorMode: 'auto', parentId: 'none', triggerPct: 100, addDelay: 0 },
+        { type: 'rail', id: 'r2', name: '3V3_SYS', delay: 20, rise: 10, color: PALETTE_MATRIX[5][3], colorMode: 'auto', parentId: 'r1', triggerPct: 100, addDelay: 0 },
+        { type: 'rail', id: 'r3', name: '1V8_CORE', delay: 15, rise: 8, color: PALETTE_MATRIX[5][4], colorMode: 'auto', parentId: 'r2', triggerPct: 100, addDelay: 0 }
+    ];
+
+    let activeColorItemId = null;
+    let activeHue = 0; 
+    let activeSat = 0; 
+    
+    window.currentSCALE = 5;
+    window.randomHueSeed = [0,1,2,3,4,5,6].sort(() => Math.random() - 0.5);
+
+    window.addEventListener('resize', () => render(false));
+    buildColorPopupGrid();
+    applyAutoColors();
+
+    function buildColorPopupGrid() {
+        let gridHTML = '';
+        let datalistHTML = '';
+        for(let s = 0; s < 5; s++) {
+            for(let h = 0; h < 7; h++) {
+                let c = PALETTE_MATRIX[h][s];
+                gridHTML += `<div class="color-swatch" style="background:${c};" onclick="setPopupColor('${c}')" title="Hue ${h}, Shade ${s}"></div>`;
+                datalistHTML += `<option value="${c}"></option>`;
+            }
+        }
+        document.getElementById('popupGrid').innerHTML = gridHTML;
+        document.getElementById('presetColors').innerHTML = datalistHTML;
+    }
+
+    function hexToHSL(hex) {
+        let r = parseInt(hex.slice(1,3), 16) / 255;
+        let g = parseInt(hex.slice(3,5), 16) / 255;
+        let b = parseInt(hex.slice(5,7), 16) / 255;
+        let max = Math.max(r, g, b), min = Math.min(r, g, b);
+        let h, s, l = (max + min) / 2;
+        if(max === min) { h = s = 0; }
+        else {
+            let d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch(max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+        }
+        return [h * 360, s * 100, l * 100];
+    }
+
+    function HSLToHex(h, s, l) {
+        l /= 100;
+        const a = s * Math.min(l, 1 - l) / 100;
+        const f = n => {
+            const k = (n + h / 30) % 12;
+            const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+            return Math.round(255 * color).toString(16).padStart(2, '0');
+        };
+        return `#${f(0)}${f(8)}${f(4)}`.toUpperCase();
+    }
+
+    function openColorPopup(id, btnElement) {
+        activeColorItemId = id;
+        const item = sequence.find(i => i.id === id);
+        
+        document.getElementById('popupAutoToggle').checked = (item.colorMode === 'auto');
+        document.getElementById('popupCustom').value = item.color;
+        
+        let [h, s, l] = hexToHSL(item.color);
+        activeHue = h; 
+        activeSat = s;
+        document.getElementById('popupShadeSlider').value = l;
+        
+        const rect = btnElement.getBoundingClientRect();
+        const popup = document.getElementById('colorPopup');
+        popup.style.display = 'block';
+        popup.style.left = (rect.left + 30) + 'px';
+        popup.style.top = (rect.top - 10) + 'px';
+    }
+
+    document.addEventListener('click', (e) => {
+        if(!e.target.closest('#colorPopup') && !e.target.closest('.color-btn')) {
+            document.getElementById('colorPopup').style.display = 'none';
+        }
+    });
+
+    function forceAutoColorAll() {
+        window.randomHueSeed = [0,1,2,3,4,5,6].sort(() => Math.random() - 0.5);
+        sequence.forEach(item => {
+            if (item.type === 'rail') item.colorMode = 'auto';
+        });
+        applyAutoColors();
+        updateUI();
+    }
+
+    function recalcAutoOnly() {
+        window.randomHueSeed = [0,1,2,3,4,5,6].sort(() => Math.random() - 0.5);
+        applyAutoColors();
+        updateUI();
+    }
+    
+    function forceInheritColor() {
+        let changed = true;
+        let passes = 0;
+        while(changed && passes < 10) {
+            changed = false;
+            sequence.forEach(item => {
+                if (item.type === 'rail' && item.colorMode === 'auto' && item.parentId !== 'none') {
+                    let parent = sequence.find(i => i.id === item.parentId);
+                    if (parent && parent.color !== item.color) {
+                        item.color = parent.color;
+                        changed = true;
+                    }
+                }
+            });
+            passes++;
+        }
+        updateUI();
+    }
+
+    function toggleAutoColor() {
+        if(!activeColorItemId) return;
+        const item = sequence.find(i => i.id === activeColorItemId);
+        let isAuto = document.getElementById('popupAutoToggle').checked;
+        item.colorMode = isAuto ? 'auto' : 'manual';
+        if(isAuto) applyAutoColors();
+        updateUI();
+    }
+
+    function setPopupColor(hex) {
+        if(!activeColorItemId) return;
+        const item = sequence.find(i => i.id === activeColorItemId);
+        item.colorMode = 'manual';
+        item.color = hex;
+        
+        let [h, s, l] = hexToHSL(hex);
+        activeHue = h; 
+        activeSat = s;
+        
+        document.getElementById('popupAutoToggle').checked = false;
+        document.getElementById('popupCustom').value = hex;
+        document.getElementById('popupShadeSlider').value = l;
+        updateUI();
+    }
+
+    function setCustomColor(hex) { setPopupColor(hex); }
+
+    function adjustShading(lightnessVal) {
+        if(!activeColorItemId) return;
+        const item = sequence.find(i => i.id === activeColorItemId);
+        let newHex = HSLToHex(activeHue, activeSat, parseFloat(lightnessVal));
+        
+        item.colorMode = 'manual';
+        item.color = newHex;
+        document.getElementById('popupAutoToggle').checked = false;
+        document.getElementById('popupCustom').value = newHex;
+        updateUI(); 
+    }
+
+    function toggleMute(id) {
+        const item = sequence.find(i => i.id === id);
+        if (item) {
+            item.muted = !item.muted;
+            render(false);
+            updateUI();
+        }
+    }
+
+    function applyAutoColors() {
+        let rails = sequence.filter(i => i.type === 'rail');
+        if (rails.length === 0) return;
+
+        let algo = document.getElementById('colorAlgo') ? document.getElementById('colorAlgo').value : 'adjacency';
+
+        let hasChildren = {};
+        rails.forEach(r => hasChildren[r.id] = rails.some(child => child.parentId === r.id));
+
+        let hueLeaders = {};
+        let orderedLeaders = [];
+        
+        rails.forEach(r => {
+            let leaderId = hasChildren[r.id] ? r.id : (r.parentId !== 'none' && rails.some(p => p.id === r.parentId) ? r.parentId : r.id);
+            hueLeaders[r.id] = leaderId;
+            if (!orderedLeaders.includes(leaderId)) orderedLeaders.push(leaderId);
+        });
+
+        let leaderHues = {};
+        let hueUsageCount = [0,0,0,0,0,0,0];
+
+        orderedLeaders.forEach(leaderId => {
+            let leaderRail = rails.find(r => r.id === leaderId);
+            if (leaderRail && leaderRail.colorMode === 'manual') {
+                let bestHue = 0, minDist = Infinity;
+                for(let h=0; h<7; h++){
+                    for(let s=0; s<5; s++){
+                        let d = getHexDistance(leaderRail.color, PALETTE_MATRIX[h][s]);
+                        if(d < minDist) { minDist = d; bestHue = h; }
+                    }
+                }
+                leaderHues[leaderId] = bestHue;
+                hueUsageCount[bestHue]++;
+            }
+        });
+
+        if (algo === 'adjacency' || algo === 'warm' || algo === 'cool' || algo === 'alternator') {
+            let adjacency = {};
+            orderedLeaders.forEach(id => adjacency[id] = new Set());
+            for (let i = 1; i < rails.length; i++) {
+                let prevLeader = hueLeaders[rails[i-1].id];
+                let curLeader = hueLeaders[rails[i].id];
+                if (prevLeader !== curLeader) {
+                    adjacency[prevLeader].add(curLeader);
+                    adjacency[curLeader].add(prevLeader);
+                }
+            }
+            
+            let PREF_ORDER = [0, 4, 1, 5, 2, 6, 3]; 
+            if (algo === 'warm') PREF_ORDER = [0, 1, 6, 2]; 
+            if (algo === 'cool') PREF_ORDER = [4, 3, 5, 2]; 
+            if (algo === 'alternator') PREF_ORDER = [0, 3]; 
+            
+            orderedLeaders.forEach(leaderId => {
+                if (leaderHues[leaderId] !== undefined) return; 
+                let neighbors = Array.from(adjacency[leaderId]);
+                let bestHue = PREF_ORDER[0];
+                let maxMinDist = -1;
+                
+                for (let candidate of PREF_ORDER) {
+                    let minDistToNeighbor = 7; 
+                    for (let n of neighbors) {
+                        if (leaderHues[n] !== undefined) {
+                            let dist = Math.min(Math.abs(candidate - leaderHues[n]), 7 - Math.abs(candidate - leaderHues[n]));
+                            if (dist < minDistToNeighbor) minDistToNeighbor = dist;
+                        }
+                    }
+                    if (minDistToNeighbor > maxMinDist) {
+                        maxMinDist = minDistToNeighbor;
+                        bestHue = candidate;
+                    } else if (minDistToNeighbor === maxMinDist) {
+                        if (hueUsageCount[candidate] < hueUsageCount[bestHue]) bestHue = candidate;
+                    }
+                }
+                leaderHues[leaderId] = bestHue;
+                hueUsageCount[bestHue]++;
+            });
+        } 
+        else if (algo === 'size') {
+            let groupSizes = {};
+            rails.forEach(r => groupSizes[hueLeaders[r.id]] = (groupSizes[hueLeaders[r.id]] || 0) + 1);
+            let sortedLeaders = [...orderedLeaders].sort((a, b) => groupSizes[b] - groupSizes[a]);
+            const HUE_SEQ = [0, 4, 2, 6, 1, 5, 3];
+            let c = 0;
+            sortedLeaders.forEach(leaderId => {
+                if (leaderHues[leaderId] === undefined) leaderHues[leaderId] = HUE_SEQ[c++ % 7];
+            });
+        }
+        else if (algo === 'rainbow') {
+            let c = 0;
+            orderedLeaders.forEach(leaderId => {
+                if (leaderHues[leaderId] === undefined) leaderHues[leaderId] = (c++) % 7;
+            });
+        }
+        else if (algo === 'mono_blue') {
+            orderedLeaders.forEach(leaderId => { if (leaderHues[leaderId] === undefined) leaderHues[leaderId] = 4; });
+        }
+        else if (algo === 'mono_red') {
+            orderedLeaders.forEach(leaderId => { if (leaderHues[leaderId] === undefined) leaderHues[leaderId] = 0; });
+        }
+        else if (algo === 'random') {
+            let c = 0;
+            orderedLeaders.forEach(leaderId => {
+                if (leaderHues[leaderId] === undefined) leaderHues[leaderId] = window.randomHueSeed[c++ % 7];
+            });
+        }
+
+        let shadeCounters = {};
+        const SHADE_SEQ = [4, 0, 3, 1]; 
+
+        rails.forEach((r, idx) => {
+            if (!r.colorMode) r.colorMode = r.color ? 'manual' : 'auto';
+
+            if (r.colorMode === 'auto') {
+                if (algo === 'scatter') {
+                    r.color = PALETTE_MATRIX[idx % 7][idx % 5];
+                } else {
+                    let leaderId = hueLeaders[r.id];
+                    let hue = leaderHues[leaderId];
+                    let shade;
+
+                    if (r.id === leaderId) {
+                        shade = 2; 
+                    } else {
+                        if (shadeCounters[leaderId] === undefined) shadeCounters[leaderId] = 0;
+                        shade = SHADE_SEQ[shadeCounters[leaderId]++ % 4];
+                    }
+                    r.color = PALETTE_MATRIX[hue][shade];
+                }
+            }
+        });
+    }
+
+    function getHexDistance(h1, h2) {
+        let r1 = parseInt(h1.slice(1,3), 16), g1 = parseInt(h1.slice(3,5), 16), b1 = parseInt(h1.slice(5,7), 16);
+        let r2 = parseInt(h2.slice(1,3), 16), g2 = parseInt(h2.slice(3,5), 16), b2 = parseInt(h2.slice(5,7), 16);
+        return (r1-r2)**2 + (g1-g2)**2 + (b1-b2)**2;
+    }
+
+    function saveConfig() {
+        const configData = {
+            version: "1.23",
+            settings: {
+                isPowerDownMode: document.getElementById('powerDownMode').checked,
+                isBWMode: document.getElementById('datasheetMode').checked,
+                autoScaleX: document.getElementById('autoScaleX').checked,
+                zoomPct: document.getElementById('zoomPct').value,
+                colorAlgo: document.getElementById('colorAlgo').value
+            },
+            sequence: sequence
+        };
+
+        const jsonString = JSON.stringify(configData, null, 4);
+        const blob = new Blob([jsonString], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        
+        let filename = document.getElementById('configFileName').value.trim();
+        if (!filename) filename = "Randomfish_A1.json"; 
+        if (!filename.toLowerCase().endsWith('.json')) filename += ".json"; 
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function loadConfig(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const loadedData = JSON.parse(e.target.result);
+                
+                if (loadedData && Array.isArray(loadedData.sequence)) {
+                    sequence = loadedData.sequence;
+                    
+                    if (loadedData.settings) {
+                        document.getElementById('powerDownMode').checked = !!loadedData.settings.isPowerDownMode;
+                        document.getElementById('datasheetMode').checked = !!loadedData.settings.isBWMode;
+                        document.getElementById('autoScaleX').checked = !!loadedData.settings.autoScaleX;
+                        if (loadedData.settings.zoomPct) document.getElementById('zoomPct').value = loadedData.settings.zoomPct;
+                        if (loadedData.settings.colorAlgo) document.getElementById('colorAlgo').value = loadedData.settings.colorAlgo;
+                    }
+                    
+                    document.getElementById('configFileName').value = file.name;
+                    
+                    sequence.forEach(item => {
+                        if (item.type === 'break') {
+                            if (item.startTime === undefined) item.startTime = 1; 
+                            if (item.muted === undefined) item.muted = false;
+                        }
+                        if (item.type === 'rail' && !item.colorMode) {
+                            item.colorMode = item.color ? 'manual' : 'auto';
+                        }
+                    });
+
+                    toggleMode(); 
+                    
+                    let needsColor = sequence.some(i => i.type === 'rail' && !i.color);
+                    if (needsColor) {
+                        applyAutoColors(); 
+                    }
+                    
+                    updateUI();
+                } else {
+                    alert("Invalid configuration file. Could not find sequence array.");
+                }
+            } catch (error) {
+                alert("Error reading file. Please ensure it is a valid JSON document.");
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    }
 
     function toggleMode() {
         const isDown = document.getElementById('powerDownMode').checked;
         const status = document.getElementById('modeStatus');
         status.innerText = isDown ? "MODE: POWER DOWN" : "MODE: POWER UP";
         status.className = `mode-indicator ${isDown ? 'down' : 'up'}`;
-        render();
+        render(false);
     }
 
-    function cloneToPowerDown() {
-        // 1. Filter only rails
+    function cloneToPowerDownFlat() {
         let railsOnly = sequence.filter(i => i.type === 'rail');
-        // 2. Reverse them (Last UP is usually First DOWN)
+        let breaks = sequence.filter(i => i.type === 'break');
         railsOnly.reverse();
-        // 3. Rebuild parents to maintain the chain in reverse
+        
         let newSequence = [];
         railsOnly.forEach((rail, index) => {
             newSequence.push({
@@ -118,7 +565,53 @@
                 parentId: index === 0 ? 'none' : 'dn_' + railsOnly[index-1].id
             });
         });
-        sequence = newSequence;
+        
+        sequence = [...newSequence, ...breaks];
+        document.getElementById('powerDownMode').checked = true;
+        toggleMode();
+        updateUI();
+    }
+
+    function cloneToPowerDownGroups() {
+        let rails = sequence.filter(i => i.type === 'rail');
+        let breaks = sequence.filter(i => i.type === 'break');
+        if (rails.length === 0) return;
+
+        let isLeader = {};
+        rails.forEach(r => {
+            isLeader[r.id] = rails.some(child => child.parentId === r.id);
+        });
+
+        const isRoot = (r) => r.parentId === 'none' || !rails.some(p => p.id === r.parentId);
+
+        let roots = rails.filter(r => isRoot(r));
+        let internalLeaders = rails.filter(r => isLeader[r.id] && !isRoot(r));
+        let leaves = rails.filter(r => !isLeader[r.id] && !isRoot(r));
+
+        let newSequence = [];
+
+        roots.forEach(root => {
+            newSequence.push({ ...root, id: 'dn_' + root.id, parentId: 'none' });
+            let rootLeaves = leaves.filter(l => l.parentId === root.id);
+            rootLeaves.slice().reverse().forEach(l => {
+                newSequence.push({ ...l, id: 'dn_' + l.id, parentId: 'dn_' + root.id });
+            });
+        });
+
+        let reversedLeaders = internalLeaders.slice().reverse();
+        let lastRootId = roots.length > 0 ? 'dn_' + roots[roots.length - 1].id : 'none';
+
+        reversedLeaders.forEach((leader, index) => {
+            let newParentId = index === 0 ? lastRootId : 'dn_' + reversedLeaders[index - 1].id;
+            newSequence.push({ ...leader, id: 'dn_' + leader.id, parentId: newParentId });
+
+            let myLeaves = leaves.filter(l => l.parentId === leader.id);
+            myLeaves.slice().reverse().forEach(l => {
+                newSequence.push({ ...l, id: 'dn_' + l.id, parentId: 'dn_' + leader.id });
+            });
+        });
+
+        sequence = [...newSequence, ...breaks];
         document.getElementById('powerDownMode').checked = true;
         toggleMode();
         updateUI();
@@ -128,23 +621,59 @@
         const id = 'id' + Math.random().toString(36).substr(2, 5);
         if (type === 'rail') {
             const last = sequence.filter(r => r.type === 'rail').pop();
-            sequence.push({ type: 'rail', id, name: 'NEW_RAIL', delay: 10, rise: 5, color: '#ba68c8', parentId: last ? last.id : 'none' });
+            sequence.push({ type: 'rail', id, name: 'NEW_RAIL', delay: 10, rise: 5, colorMode: 'auto', color: '#fff', parentId: last ? last.id : 'none', triggerPct: 100, addDelay: 0 });
+            applyAutoColors(); 
         } else {
-            sequence.push({ type: 'break', id, duration: 200, visualWidth: 40 });
+            sequence.push({ type: 'break', id, startTime: 1, duration: 2, visualWidth: 40, muted: false });
         }
         updateUI();
     }
 
     function removeItem(id) {
         sequence = sequence.filter(i => i.id !== id);
+        applyAutoColors(); 
+        updateUI();
+    }
+
+    function moveItem(id, direction) {
+        const index = sequence.findIndex(i => i.id === id);
+        if (index < 0) return;
+        const newIndex = index + direction;
+        if (newIndex < 0 || newIndex >= sequence.length) return;
+        
+        [sequence[index], sequence[newIndex]] = [sequence[newIndex], sequence[index]];
+        applyAutoColors(); 
+        updateUI();
+    }
+
+    function moveToTop(id) {
+        const index = sequence.findIndex(i => i.id === id);
+        if (index <= 0) return;
+        const item = sequence.splice(index, 1)[0];
+        sequence.unshift(item);
+        applyAutoColors(); 
+        updateUI();
+    }
+
+    function moveToBottom(id) {
+        const index = sequence.findIndex(i => i.id === id);
+        if (index < 0 || index === sequence.length - 1) return;
+        const item = sequence.splice(index, 1)[0];
+        sequence.push(item);
+        applyAutoColors(); 
         updateUI();
     }
 
     function updateVal(id, key, val, needsUIUpdate = false) {
         const item = sequence.find(i => i.id === id);
         if (item) {
-            item[key] = (typeof item[key] === 'string') ? val : (parseFloat(val) || 0);
-            if (needsUIUpdate) updateUI(); else render();
+            if (key === 'name' || key === 'parentId') {
+                item[key] = val;
+                if(key === 'parentId') applyAutoColors();
+            } else {
+                item[key] = parseFloat(val) || 0; 
+            }
+            if (needsUIUpdate) updateUI(); else render(false);
         }
     }
 
@@ -152,34 +681,95 @@
         const list = document.getElementById('itemList');
         list.innerHTML = '';
         const railOptions = sequence.filter(i => i.type === 'rail');
-        sequence.forEach(item => {
+        
+        sequence.forEach((item, index) => {
             const card = document.createElement('div');
             card.className = `item-card ${item.type}`;
+            if (item.type === 'break' && item.muted) {
+                card.style.opacity = '0.5';
+            }
+            
             if (item.type === 'rail') {
+                const controlsHTML = `
+                    <div class="card-controls">
+                        <button class="icon-btn" onclick="moveToTop('${item.id}')" title="Move to Top">⇈</button>
+                        <button class="icon-btn" onclick="moveItem('${item.id}', -1)" title="Move Up">▲</button>
+                        <button class="icon-btn" onclick="moveItem('${item.id}', 1)" title="Move Down">▼</button>
+                        <button class="icon-btn" onclick="moveToBottom('${item.id}')" title="Move to Bottom">⇊</button>
+                        <button class="icon-btn remove" onclick="removeItem('${item.id}')" title="Delete">✕</button>
+                    </div>
+                `;
+
                 let options = `<option value="none">None (Start 0)</option>`;
                 railOptions.forEach(r => { if (r.id !== item.id) options += `<option value="${r.id}" ${item.parentId === r.id ? 'selected' : ''}>${r.name}</option>`; });
-                card.innerHTML = `<button class="remove-btn" onclick="removeItem('${item.id}')">✕</button>
-                    <input type="text" value="${item.name}" oninput="updateVal('${item.id}', 'name', this.value)">
-                    <div style="display:flex;gap:5px">
-                        <div style="flex:1"><label>Delay</label><input type="number" value="${item.delay}" oninput="updateVal('${item.id}', 'delay', this.value)"></div>
+                
+                let tPct = item.triggerPct !== undefined ? item.triggerPct : 100;
+                let aDly = item.addDelay !== undefined ? item.addDelay : 0;
+                
+                const cText = item.colorMode === 'auto' ? 'A' : 'M';
+                const colorBtn = `<div class="color-btn" onclick="openColorPopup('${item.id}', this)" title="Color Settings" style="width:12px; height:18px; padding:0; border:1px solid #000; border-radius:3px; cursor:pointer; flex-shrink:0; background:${item.color}; color:#000; font-weight:bold; font-size:9px; display:flex; align-items:center; justify-content:center;">${cText}</div>`;
+
+                card.innerHTML = `
+                    ${controlsHTML}
+                    
+                    <div style="display:flex; gap:6px; align-items:center; margin-bottom: 4px; width: calc(100% - 135px);">
+                        ${colorBtn}
+                        <input type="text" value="${item.name}" oninput="updateVal('${item.id}', 'name', this.value)" style="margin:0; flex-grow:1;">
+                    </div>
+                    
+                    <div style="display:flex;gap:5px;">
+                        <div style="flex:1"><label>Base Delay</label><input type="number" value="${item.delay}" oninput="updateVal('${item.id}', 'delay', this.value)"></div>
                         <div style="flex:1"><label>Fall/Rise</label><input type="number" value="${item.rise}" oninput="updateVal('${item.id}', 'rise', this.value)"></div>
                     </div>
-                    <label>Trigger Parent</label><select onchange="updateVal('${item.id}', 'parentId', this.value, true)">${options}</select>`;
+                    
+                    <div style="display:flex;gap:5px;">
+                        <div style="flex:2">
+                            <label>Trigger Parent</label>
+                            <select onchange="updateVal('${item.id}', 'parentId', this.value, true)">${options}</select>
+                        </div>
+                        <div style="flex:1">
+                            <label>Trig %</label>
+                            <input type="number" min="0" max="100" value="${tPct}" oninput="updateVal('${item.id}', 'triggerPct', this.value)">
+                        </div>
+                        <div style="flex:1">
+                            <label>Add. Dly</label>
+                            <input type="number" value="${aDly}" oninput="updateVal('${item.id}', 'addDelay', this.value)">
+                        </div>
+                    </div>
+                `;
             } else {
-                card.innerHTML = `<button class="remove-btn" onclick="removeItem('${item.id}')">✕</button>
-                    <div style="font-weight:bold; color:var(--break); font-size:0.7rem">TIME BREAK</div>
-                    <div style="display:flex;gap:5px">
-                        <div style="flex:1"><label>ms</label><input type="number" value="${item.duration}" oninput="updateVal('${item.id}', 'duration', this.value)"></div>
-                        <div style="flex:1"><label>px</label><input type="number" value="${item.visualWidth}" oninput="updateVal('${item.id}', 'visualWidth', this.value)"></div>
-                    </div>`;
+                const muteIcon = item.muted ? '🙈' : '👁️';
+                const muteTitle = item.muted ? 'Unmute Break' : 'Mute Break';
+
+                const controlsHTML = `
+                    <div class="card-controls">
+                        <button class="icon-btn" onclick="toggleMute('${item.id}')" title="${muteTitle}">${muteIcon}</button>
+                        <button class="icon-btn" onclick="moveToTop('${item.id}')" title="Move to Top">⇈</button>
+                        <button class="icon-btn" onclick="moveItem('${item.id}', -1)" title="Move Up">▲</button>
+                        <button class="icon-btn" onclick="moveItem('${item.id}', 1)" title="Move Down">▼</button>
+                        <button class="icon-btn" onclick="moveToBottom('${item.id}')" title="Move to Bottom">⇊</button>
+                        <button class="icon-btn remove" onclick="removeItem('${item.id}')" title="Delete">✕</button>
+                    </div>
+                `;
+
+                card.innerHTML = `
+                    ${controlsHTML}
+                    <div style="font-weight:bold; color:var(--break); font-size:0.75rem; margin-top:2px;">TIME BREAK</div>
+                    <div style="display:flex;gap:5px; margin-top:10px;">
+                        <div style="flex:1"><label>Start (ms)</label><input type="number" step="0.1" value="${item.startTime !== undefined ? item.startTime : 1}" oninput="updateVal('${item.id}', 'startTime', this.value)"></div>
+                        <div style="flex:1"><label>Span (ms)</label><input type="number" value="${item.duration}" oninput="updateVal('${item.id}', 'duration', this.value)"></div>
+                        <div style="flex:1"><label>Width (px)</label><input type="number" value="${item.visualWidth}" oninput="updateVal('${item.id}', 'visualWidth', this.value)"></div>
+                    </div>
+                `;
             }
             list.appendChild(card);
         });
-        render();
+        render(false);
     }
 
-    function render() {
+    function render(isZooming = false) {
         const svg = document.getElementById('visualizer');
+        const mainContainer = document.querySelector('.main');
         const isDown = document.getElementById('powerDownMode').checked;
         const isBW = document.getElementById('datasheetMode').checked;
         
@@ -188,101 +778,338 @@
             text: isBW ? "#333" : "#888", 
             arrow: isBW ? "#444" : (isDown ? "#ff5252" : "#ffea00"), 
             marker: isBW ? "#bbb" : "#333", 
-            markerText: isBW ? "#000" : (isDown ? "#ff5252" : "#00e676") 
+            markerText: isBW ? "#000" : (isDown ? "#ff5252" : "#00e676"),
+            grid: isBW ? "#e0e0e0" : "#1f1f1f",
+            axis: isBW ? "#888" : "#555",
+            gridText: isBW ? "#555" : "#666",
+            totalTime: isBW ? "#555" : "#29b6f6" 
         };
 
-        svg.style.background = colors.bg;
-        svg.innerHTML = '';
+        const LANE_H = 65;       
+        const SIGNAL_AMP = 30;   
+        const X_OFF = 160;       
         
-        const SCALE = 5, LANE_H = 100, X_OFF = 160;
-        let globalTimelineX = X_OFF;
-        let railGeometries = {}; 
-        let breakList = [];
-        let maxReachedX = X_OFF;
+        let oldCenterLogicalX = 0;
+        let didRecordCenter = false;
+        
+        if (isZooming && mainContainer && window.currentSCALE) {
+            const cw = mainContainer.clientWidth;
+            const scrollX = mainContainer.scrollLeft;
+            oldCenterLogicalX = (scrollX + cw / 2 - X_OFF) / window.currentSCALE;
+            didRecordCenter = true;
+        }
 
-        let railIndex = 0;
+        let maxLogicalTime = 0;
+        let logicalGeom = {};
+        let breakList = [];
+        
         sequence.forEach((item) => {
             if (item.type === 'break') {
-                breakList.push({ x: globalTimelineX, width: item.visualWidth, ms: item.duration });
-                globalTimelineX += item.visualWidth;
-            } else {
-                const y = (railIndex + 1) * LANE_H + 50;
-                let anchorX = globalTimelineX;
-                if (item.parentId !== 'none' && railGeometries[item.parentId]) anchorX = railGeometries[item.parentId].end;
-                const start = anchorX + (item.delay * SCALE);
-                const end = start + (item.rise * SCALE);
+                if (item.muted) return; 
+                if(item.startTime === undefined) item.startTime = 1;
+                breakList.push(item);
+            } else if (item.type === 'rail') {
+                let startLog = 0;
+                let tPct = item.triggerPct !== undefined ? item.triggerPct : 100;
+                let aDly = item.addDelay !== undefined ? item.addDelay : 0;
                 
-                railGeometries[item.id] = { y, start, end, name: item.name, color: isBW ? "#000" : item.color, anchorX, delay: item.delay, parentId: item.parentId };
-                globalTimelineX = end;
-                maxReachedX = Math.max(maxReachedX, end);
+                if (item.parentId !== 'none' && logicalGeom[item.parentId]) {
+                    const p = logicalGeom[item.parentId];
+                    if (isDown) {
+                        startLog = p.start + (p.end - p.start) * ((100 - tPct) / 100);
+                    } else {
+                        startLog = p.start + (p.end - p.start) * (tPct / 100);
+                    }
+                }
+                
+                let triggerTime = startLog;
+                let totalDelay = item.delay + aDly;
+                let start = triggerTime + totalDelay;
+                let end = start + item.rise;
+                
+                logicalGeom[item.id] = { 
+                    triggerTime, start, end, totalDelay, delay: item.delay, addDelay: aDly, rise: item.rise, 
+                    name: item.name, color: isBW ? "#000" : item.color, parentId: item.parentId, triggerPct: tPct 
+                };
+                
+                if (end > maxLogicalTime) maxLogicalTime = end;
+            }
+        });
+
+        let sortedBreaks = [...breakList].sort((a, b) => a.startTime - b.startTime);
+
+        let SCALE = window.currentSCALE || 5; 
+        
+        let L_total = maxLogicalTime;
+        let W_breaks = 0;
+        sortedBreaks.forEach(b => {
+            if (b.startTime < maxLogicalTime) {
+                let overlap = Math.min(b.duration, maxLogicalTime - b.startTime);
+                L_total -= overlap;
+                W_breaks += b.visualWidth;
+            }
+        });
+        if (L_total < 0.1) L_total = 0.1; 
+
+        if (mainContainer && maxLogicalTime > 0) {
+            const availableWidthForScale = mainContainer.clientWidth - X_OFF - 100 - W_breaks; 
+            if (availableWidthForScale > 50) {
+                const baseScaleFit100 = availableWidthForScale / L_total;
+                if (document.getElementById('autoScaleX').checked) {
+                    document.getElementById('zoomPct').value = 100;
+                }
+                let zoomRatio = (parseFloat(document.getElementById('zoomPct').value) || 100) / 100;
+                SCALE = baseScaleFit100 * zoomRatio;
+            }
+        }
+        window.currentSCALE = SCALE;
+
+        function getPhysicalX(timeMs) {
+            let px = X_OFF;
+            let currentLog = 0;
+            for (let b of sortedBreaks) {
+                if (timeMs <= b.startTime) {
+                    return px + (timeMs - currentLog) * SCALE;
+                }
+                if (timeMs < b.startTime + b.duration) {
+                    let ratio = (timeMs - b.startTime) / b.duration;
+                    return px + (b.startTime - currentLog) * SCALE + ratio * b.visualWidth;
+                }
+                px += (b.startTime - currentLog) * SCALE + b.visualWidth;
+                currentLog = b.startTime + b.duration;
+            }
+            return px + (timeMs - currentLog) * SCALE;
+        }
+
+        function getLogicalTime(xPos) {
+            if (xPos <= X_OFF) return 0;
+            let px = X_OFF;
+            let currentLog = 0;
+            for (let b of sortedBreaks) {
+                let distToBreak = (b.startTime - currentLog) * SCALE;
+                if (xPos <= px + distToBreak) {
+                    return currentLog + (xPos - px) / SCALE;
+                }
+                px += distToBreak;
+                currentLog = b.startTime;
+                
+                if (xPos <= px + b.visualWidth) {
+                    let ratio = (xPos - px) / b.visualWidth;
+                    return currentLog + ratio * b.duration;
+                }
+                px += b.visualWidth;
+                currentLog += b.duration;
+            }
+            return currentLog + (xPos - px) / SCALE;
+        }
+
+        let railGeometries = {}; 
+        let maxReachedX = X_OFF;
+        let railIndex = 0;
+        
+        sequence.forEach((item) => {
+            if (item.type === 'rail') {
+                const y = (railIndex + 1) * LANE_H + 50; 
+                let g = logicalGeom[item.id];
+                
+                g.y = y;
+                g.anchorPhys = getPhysicalX(g.triggerTime);
+                g.startPhys = getPhysicalX(g.start);
+                g.endPhys = getPhysicalX(g.end);
+                
+                railGeometries[item.id] = g;
+                
+                maxReachedX = Math.max(maxReachedX, g.endPhys);
                 railIndex++;
             }
         });
+        
+        sortedBreaks.forEach(b => {
+            let breakEndPhys = getPhysicalX(b.startTime + b.duration);
+            maxReachedX = Math.max(maxReachedX, breakEndPhys);
+        });
 
-        const totalWidth = maxReachedX + 250;
-        const totalHeight = (railIndex + 1) * LANE_H + 50;
+        let lastRailY = railIndex > 0 ? (railIndex * LANE_H + 50) : 50;
+        const totalWidth = maxReachedX + 100;
+        const totalHeight = lastRailY + 45; 
+        
+        svg.style.background = colors.bg;
         svg.setAttribute('width', totalWidth);
         svg.setAttribute('height', totalHeight);
 
-        Object.values(railGeometries).forEach((g, i) => drawGlobalMarker(svg, g.start, totalHeight, `T${i}`, colors.marker, colors.markerText));
+        if (isZooming && didRecordCenter) {
+            const cw = mainContainer.clientWidth;
+            const newCenterPhys = X_OFF + (oldCenterLogicalX * SCALE);
+            mainContainer.scrollLeft = newCenterPhys - cw / 2;
+        }
+
+        let htmlGridLines = '';
+        let htmlGridText = '';
+        let htmlMarkerLines = '';
+        let htmlRails = '';
+        let htmlBreakBGs = '';
+        let htmlBreakTexts = '';
+        let htmlDelayArrows = ''; 
+        let htmlTopLines = '';
+        let htmlMarkerTexts = '';
+        let htmlTopTexts = '';
+
+        const targetMs = 80 / SCALE; 
+        const magnitude = Math.pow(10, Math.floor(Math.log10(targetMs)));
+        const val = targetMs / magnitude;
+        let tickMs;
+        if (val < 1.5) tickMs = 1 * magnitude;
+        else if (val < 3.5) tickMs = 2 * magnitude;
+        else if (val < 7.5) tickMs = 5 * magnitude;
+        else tickMs = 10 * magnitude;
+
+        let currentX = X_OFF;
+        sortedBreaks.forEach(b => {
+            let pxStart = getPhysicalX(b.startTime);
+            let midX = pxStart + (b.visualWidth / 2);
+            let gap = b.visualWidth / 5;
+            let breakStart = midX - gap;
+            let breakEnd = midX + gap;
+            
+            if (breakStart > currentX) {
+                htmlGridText += `<line x1="${currentX}" y1="25" x2="${breakStart}" y2="25" stroke="${colors.axis}" stroke-width="2" />`;
+            }
+            currentX = breakEnd;
+        });
+        if (currentX < totalWidth) {
+            htmlGridText += `<line x1="${currentX}" y1="25" x2="${totalWidth}" y2="25" stroke="${colors.axis}" stroke-width="2" />`;
+        }
+
+        const calculatedMaxLogTime = getLogicalTime(totalWidth);
+        
+        for (let t = 0; t <= calculatedMaxLogTime; t += tickMs) {
+            t = Math.round(t * 1000) / 1000;
+            
+            let inBreak = sortedBreaks.some(b => t > b.startTime && t < b.startTime + b.duration);
+            if (inBreak) continue;
+
+            let px = getPhysicalX(t);
+            if (px !== null) {
+                htmlGridLines += `<line x1="${px}" y1="25" x2="${px}" y2="${totalHeight}" stroke="${colors.grid}" stroke-width="1" />`;
+                htmlGridText += `<line x1="${px}" y1="21" x2="${px}" y2="29" stroke="${colors.axis}" stroke-width="2" />`;
+                htmlGridText += `<text x="${px}" y="15" fill="${colors.gridText}" font-size="11" text-anchor="middle" font-family="monospace">${t}ms</text>`;
+            }
+        }
+
+        let markers = Object.values(railGeometries).map((g, i) => ({ x: g.startPhys, label: `T${i}` }));
+        markers.sort((a, b) => a.x - b.x); 
+        
+        let lastX = [-999, -999, -999, -999]; 
+        const MIN_DIST = 26; 
+
+        markers.forEach(m => {
+            let level = 0;
+            for(let i=0; i<4; i++) {
+                if(m.x - lastX[i] >= MIN_DIST) {
+                    level = i;
+                    break;
+                }
+            }
+            if (m.x - lastX[level] < MIN_DIST) level = 3; 
+            m.level = level;
+            lastX[level] = m.x;
+        });
+
+        markers.forEach(m => {
+            htmlMarkerLines += `<line x1="${m.x}" y1="45" x2="${m.x}" y2="${lastRailY + 10}" stroke="${colors.marker}" stroke-width="1" stroke-dasharray="4,4" opacity="0.6"/>`;
+            
+            if (m.level === 0 || m.level === 2) {
+                const topY = 38 + (m.level === 2 ? 12 : 0);
+                htmlMarkerTexts += `<text x="${m.x}" y="${topY}" fill="${colors.markerText}" font-size="10" font-weight="bold" text-anchor="middle">${m.label}</text>`;
+            } else {
+                const botY = lastRailY + 22 + (m.level === 3 ? 12 : 0);
+                htmlMarkerTexts += `<text x="${m.x}" y="${botY}" fill="${colors.markerText}" font-size="10" font-weight="bold" text-anchor="middle">${m.label}</text>`;
+            }
+        });
 
         Object.values(railGeometries).forEach(g => {
             let path = isDown ? 
-                `M ${X_OFF},${g.y-40} L ${g.start},${g.y-40} L ${g.end},${g.y} L ${totalWidth},${g.y}` :
-                `M ${X_OFF},${g.y} L ${g.start},${g.y} L ${g.end},${g.y-40} L ${totalWidth},${g.y-40}`;
+                `M ${X_OFF},${g.y-SIGNAL_AMP} L ${g.startPhys},${g.y-SIGNAL_AMP} L ${g.endPhys},${g.y} L ${totalWidth},${g.y}` :
+                `M ${X_OFF},${g.y} L ${g.startPhys},${g.y} L ${g.endPhys},${g.y-SIGNAL_AMP} L ${totalWidth},${g.y-SIGNAL_AMP}`;
             
-            svg.innerHTML += `<path d="${path}" fill="none" stroke="${g.color}" stroke-width="3" stroke-linecap="round" />`;
-            svg.innerHTML += `<text x="15" y="${g.y-10}" fill="${g.color}" font-size="14" font-weight="bold" font-family="Arial">${g.name}</text>`;
+            htmlRails += `<path d="${path}" fill="none" stroke="${g.color}" stroke-width="3" stroke-linecap="round" />`;
+            htmlRails += `<text x="15" y="${g.y-5}" fill="${g.color}" font-size="14" font-weight="bold" font-family="Arial">${g.name}</text>`;
             
             if (g.parentId !== 'none' && railGeometries[g.parentId]) {
                 const parent = railGeometries[g.parentId];
-                const yF = isDown ? parent.y : parent.y - 40;
-                const yT = isDown ? g.y - 40 : g.y - 15;
-                svg.innerHTML += `<line x1="${g.anchorX}" y1="${yF}" x2="${g.anchorX}" y2="${yT}" stroke="${colors.arrow}" stroke-width="1" stroke-dasharray="3,3" opacity="0.6" />`;
+                const yF = parent.y - SIGNAL_AMP * (g.triggerPct / 100);
+                const yT = isDown ? g.y - SIGNAL_AMP : g.y - 10;
+                
+                htmlRails += `<line x1="${g.anchorPhys}" y1="${yF}" x2="${g.anchorPhys}" y2="${yT}" stroke="${colors.arrow}" stroke-width="1" stroke-dasharray="3,3" opacity="0.6" />`;
+                htmlRails += `<circle cx="${g.anchorPhys}" cy="${yF}" r="3" fill="${colors.arrow}" />`;
             }
-            if (g.delay > 0) drawArrow(svg, g.anchorX, g.start, isDown ? g.y-45 : g.y-15, `${g.delay}ms`, colors.arrow);
+            
+            if (g.totalDelay > 0 || g.rise > 0) {
+                let arrowY = g.y - SIGNAL_AMP - 10;
+                let fullTime = Math.round((g.totalDelay + g.rise) * 1000) / 1000;
+                let delayText = `${fullTime}ms`;
+                
+                htmlDelayArrows += `<line x1="${g.anchorPhys}" y1="${arrowY}" x2="${g.endPhys}" y2="${arrowY}" stroke="${colors.arrow}" stroke-width="1.5" />`;
+                htmlDelayArrows += `<path d="M${g.anchorPhys+6} ${arrowY-4} L${g.anchorPhys} ${arrowY} L${g.anchorPhys+6} ${arrowY+4} M${g.endPhys-6} ${arrowY-4} L${g.endPhys} ${arrowY} L${g.endPhys-6} ${arrowY+4}" fill="none" stroke="${colors.arrow}" />`;
+                htmlDelayArrows += `<text x="${(g.anchorPhys+g.endPhys)/2}" y="${arrowY-8}" fill="${colors.arrow}" font-size="11" text-anchor="middle" font-weight="bold" font-family="monospace">${delayText}</text>`;
+                
+                if (g.addDelay > 0 && g.delay > 0) {
+                    let splitPhys = getPhysicalX(g.triggerTime + g.delay);
+                    if (splitPhys - g.anchorPhys >= 10 && g.endPhys - splitPhys >= 10) {
+                        htmlDelayArrows += `<line x1="${splitPhys}" y1="${arrowY}" x2="${splitPhys}" y2="${arrowY + 4}" stroke="${colors.arrow}" stroke-width="1.5" />`;
+                    }
+                }
+                if (g.rise > 0 && g.totalDelay > 0) {
+                    let riseStartPhys = getPhysicalX(g.start);
+                    if (riseStartPhys - g.anchorPhys >= 10 && g.endPhys - riseStartPhys >= 10) {
+                        htmlDelayArrows += `<line x1="${riseStartPhys}" y1="${arrowY}" x2="${riseStartPhys}" y2="${arrowY + 4}" stroke="${colors.arrow}" stroke-width="1.5" />`;
+                    }
+                }
+            }
         });
 
-        breakList.forEach(b => drawCurvyBreak(svg, b.x, b.width, b.ms, totalHeight, colors.text, colors.bg));
-    }
+        sortedBreaks.forEach(b => {
+            let pxStart = getPhysicalX(b.startTime);
+            const midX = pxStart + (b.visualWidth / 2);
+            const curve = b.visualWidth / 3, gap = b.visualWidth / 5;
+            
+            htmlBreakBGs += `<rect x="${pxStart}" y="25" width="${b.visualWidth}" height="${totalHeight - 25}" fill="${colors.bg}" />`;
+            const p = (off) => {
+                let d = `M ${off} 25`;
+                for (let y = 25; y < totalHeight; y += 100) d += ` C ${off + curve} ${y + 25}, ${off - curve} ${y + 75}, ${off} ${y + 100}`;
+                return d;
+            };
+            htmlBreakBGs += `<path d="${p(midX-gap)}" stroke="${colors.text}" stroke-width="2" fill="none" />
+                           <path d="${p(midX+gap)}" stroke="${colors.text}" stroke-width="2" fill="none" />`;
+            
+            const textWidth = b.duration.toString().length * 8 + 20; 
+            htmlBreakTexts += `<rect x="${midX - (textWidth/2)}" y="35" width="${textWidth}" height="20" fill="${colors.bg}" rx="4" />
+                           <text x="${midX}" y="50" fill="${colors.text}" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">${b.duration}ms</text>`;
+        });
 
-    function drawGlobalMarker(svg, x, h, label, col, txtCol) {
-        svg.innerHTML += `<line x1="${x}" y1="40" x2="${x}" y2="${h - 20}" stroke="${col}" stroke-width="1" stroke-dasharray="4,4" />`;
-        svg.innerHTML += `<text x="${x}" y="30" fill="${txtCol}" font-size="11" font-weight="bold" text-anchor="middle">${label}</text>`;
-        svg.innerHTML += `<text x="${x}" y="${h - 5}" fill="${txtCol}" font-size="11" font-weight="bold" text-anchor="middle">${label}</text>`;
-    }
+        if (Object.keys(railGeometries).length > 0) {
+            let minX = Infinity;
+            let maxX = X_OFF;
+            Object.values(railGeometries).forEach(g => {
+                if (g.startPhys < minX) minX = g.startPhys;
+                if (g.endPhys > maxX) maxX = g.endPhys;
+            });
 
-function drawCurvyBreak(svg, x, width, ms, height, color, bg) {
-    const midX = x + (width / 2);
-    const curve = width / 3, gap = width / 5;
-    
-    // 1. Clear the area behind the curves
-    svg.innerHTML += `<rect x="${x}" y="0" width="${width}" height="${height}" fill="${bg}" />`;
-    
-    const p = (off) => {
-        let d = `M ${off} 0`;
-        for (let y = 0; y < height; y += 100) d += ` C ${off + curve} ${y + 25}, ${off - curve} ${y + 75}, ${off} ${y + 100}`;
-        return d;
-    };
+            if (minX !== Infinity) {
+                let totalLogicalTime = getLogicalTime(maxX) - getLogicalTime(minX);
+                let displayTimeStr = totalLogicalTime.toFixed(3);
 
-    // 2. Draw the Bezier curves
-    svg.innerHTML += `<path d="${p(midX-gap)}" stroke="${color}" stroke-width="2" fill="none" />
-                      <path d="${p(midX+gap)}" stroke="${color}" stroke-width="2" fill="none" />`;
-    
-    // 3. The Guard: Rectangle background for text readability
-    // We place this after the signal lines are drawn (which happens in the render loop)
-    // so it properly masks the signals passing through the break.
-    const textWidth = ms.toString().length * 8 + 20; // Dynamic width based on digits
-    svg.innerHTML += `
-        <rect x="${midX - (textWidth/2)}" y="35" width="${textWidth}" height="20" fill="${bg}" rx="4" />
-        <text x="${midX}" y="50" fill="${color}" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">${ms}ms</text>
-    `;
-}
+                htmlTopLines += `<line x1="${minX}" y1="35" x2="${minX}" y2="${lastRailY + 10}" stroke="${colors.totalTime}" stroke-width="1.5" stroke-dasharray="2,3" opacity="0.6"/>`;
+                htmlTopLines += `<line x1="${maxX}" y1="35" x2="${maxX}" y2="${lastRailY + 10}" stroke="${colors.totalTime}" stroke-width="1.5" stroke-dasharray="2,3" opacity="0.6"/>`;
+                
+                htmlTopLines += `<line x1="${minX}" y1="60" x2="${maxX}" y2="60" stroke="${colors.totalTime}" stroke-width="1.5" />`;
+                htmlTopLines += `<path d="M${minX+6} 56 L${minX} 60 L${minX+6} 64 M${maxX-6} 56 L${maxX} 60 L${maxX-6} 64" fill="none" stroke="${colors.totalTime}" />`;
 
-    function drawArrow(svg, x1, x2, y, txt, col) {
-        svg.innerHTML += `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${col}" stroke-width="1.5" />
-            <path d="M${x1+6} ${y-4} L${x1} ${y} L${x1+6} ${y+4} M${x2-6} ${y-4} L${x2} ${y} L${x2-6} ${y+4}" fill="none" stroke="${col}" />
-            <text x="${(x1+x2)/2}" y="${y-8}" fill="${col}" font-size="11" text-anchor="middle" font-weight="bold" font-family="monospace">${txt}</text>`;
+                htmlTopTexts += `<text x="${(minX+maxX)/2}" y="50" fill="${colors.totalTime}" font-size="11" text-anchor="middle" font-weight="bold" font-family="monospace">TOTAL TIME: ${displayTimeStr}ms</text>`;
+            }
+        }
+
+        svg.innerHTML = htmlGridLines + htmlMarkerLines + htmlRails + htmlBreakBGs + htmlDelayArrows + htmlGridText + htmlTopLines + htmlTopTexts + htmlBreakTexts + htmlMarkerTexts;
     }
 
     function exportSVG() {
@@ -290,9 +1117,14 @@ function drawCurvyBreak(svg, x, width, ms, height, color, bg) {
         const svgData = new XMLSerializer().serializeToString(svgElement);
         const svgBlob = new Blob([svgData], {type: "image/svg+xml;charset=utf-8"});
         const svgUrl = URL.createObjectURL(svgBlob);
+        
+        let filename = document.getElementById('configFileName').value.trim();
+        if (!filename) filename = "Randomfish_A1";
+        filename = filename.replace(/\.json$/i, ".svg"); 
+        
         const downloadLink = document.createElement("a");
         downloadLink.href = svgUrl;
-        downloadLink.download = "power_sequence_export.svg";
+        downloadLink.download = filename;
         document.body.appendChild(downloadLink);
         downloadLink.click();
         document.body.removeChild(downloadLink);
@@ -300,24 +1132,13 @@ function drawCurvyBreak(svg, x, width, ms, height, color, bg) {
 
     updateUI();
 </script>
-    <footer style="display:none;" aria-hidden="true">
+<footer style="display:none;" aria-hidden="true">
     <section>
         <h2>About Power-Up Designer</h2>
         <p>
-            The Power-Up Designer is a specialized **hardware engineering utility** designed to automate the creation of 
-            **voltage rail timing diagrams**. When designing complex PCB systems—especially those involving FPGAs, 
-            SoCs, or microcontrollers—engineers must strictly adhere to specific **power-on reset (POR)** and **power-down sequencing** requirements to prevent latch-up or hardware damage.
-        </p>
-        <p>
-            This tool replaces manual drawing in generic CAD software by providing a dynamic interface for:
-            <ul> power up sequence diagram online
-            </ul>
-            <ul> power down sequence diagram online
-            </ul>
-            <ul> power sequence online
-            </ul>
-            <ul> signal sequence diagram online
-            </ul>
+            The Power-Up Designer is a specialized hardware engineering utility designed to automate the creation of 
+            voltage rail timing diagrams. When designing complex PCB systems—especially those involving FPGAs, 
+            SoCs, or microcontrollers—engineers must strictly adhere to specific power-on reset (POR) and power-down sequencing requirements to prevent latch-up or hardware damage.
         </p>
     </section>
 </footer>
