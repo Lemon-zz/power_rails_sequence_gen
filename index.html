@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
+    <!-- Page title and SEO meta tags -->
     <title>Power-Up Sequence Diagram Designer | Hardware Timing & Sequence Diagram Tool</title>
     <meta name="title" content="Power-Up sequence Designer | Hardware Timing & Sequence Diagram Tool">
     <meta name="description" content="Free online power-up and power-down sequence generator. Design professional voltage rail timing diagrams">
@@ -11,18 +12,20 @@
     <meta name="author" content="Lemon_ZZ, Kristian Bergh">
     <meta name="google-site-verification" content="MnsxTW7zOf2yAo_K5zL9RxRQOgJUUEcF4PJg9DmITDU" />
 
-    <!-- Favicon & App Icons -->
+    <!-- Favicon & App Icons for various platforms and devices -->
     <link rel="icon" type="image/x-icon" href="./favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
     <link rel="manifest" href="./site.webmanifest">
     
+    <!-- Open Graph meta tags for social media link previews -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://lemon-zz.github.io/power_rails_sequence_gen/"> <meta property="og:title" content="Power-Up Sequence Designer">
     <meta property="og:description" content="Design power sequences in seconds. Features Tn markers, power-down cloning, and vector SVG export.">
     <meta property="og:image" content="https://lemon-zz.github.io/power_rails_sequence_gen/assets/preview.png">
-    <!-- 3. Schema.org Structured Data (Crucial for modern Google SEO) -->
+
+    <!-- Schema.org Structured Data for Google rich results / SEO -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -39,106 +42,182 @@
       }
     }
     </script>
+
     <style>
+        /* ── CSS Custom Properties (Design Tokens) ─────────────────────────────
+           Dark-theme color palette used throughout the entire UI.
+           --bg:     page background
+           --panel:  sidebar background
+           --accent: green highlight / power-up color
+           --text:   default body text
+           --break:  orange used for time-break items
+           --down:   red used for power-down mode
+        */
         :root { --bg: #121212; --panel: #1e1e1e; --accent: #00e676; --text: #cfd8dc; --break: #ff9800; --down: #ff5252; }
+
+        /* Full-height flex layout: sidebar on the left, SVG canvas on the right */
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar: fixed 380 px wide, scrollable, does not shrink */
         .sidebar { width: 380px; background: var(--panel); border-right: 1px solid #333; display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; overflow-y: auto; flex-shrink: 0; }
+
+        /* Section headings inside the sidebar */
         h2 { color: var(--accent); font-size: 1.1rem; margin: 0; border-bottom: 1px solid #333; padding-bottom: 10px; font-weight: 800; }
         
+        /* Individual rail / break cards in the item list */
         .item-card { background: #252525; border-radius: 6px; padding: 8px 10px 10px 10px; margin-bottom: 8px; border-left: 4px solid var(--accent); position: relative; transition: opacity 0.2s; }
+        /* Break cards use the orange accent on their left border */
         .item-card.break { border-left-color: var(--break); }
+
+        /* Small uppercase labels above form inputs */
         label { display: block; font-size: 0.6rem; color: #888; margin-top: 6px; margin-bottom: 2px; text-transform: uppercase; font-weight: bold; }
+
+        /* Shared styling for text inputs, number inputs and selects */
         input[type="text"], input[type="number"], select { background: #333; border: 1px solid #444; color: white; padding: 4px 6px; border-radius: 4px; width: 100%; box-sizing: border-box; font-family: monospace; font-size: 0.75rem; }
         
+        /* Absolute-positioned control cluster (arrows + delete) in the top-right of each card */
         .card-controls { position: absolute; top: 6px; right: 6px; display: flex; gap: 4px; }
+
+        /* Small square icon buttons used inside card controls */
         .icon-btn { background: #444; color: #fff; border: none; cursor: pointer; width: 22px; height: 22px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; padding: 0; }
         .icon-btn:hover { background: #555; }
+        /* Delete button gets a red tint */
         .icon-btn.remove { color: #ff5252; }
         
+        /* Main SVG canvas area — grows to fill remaining width, scrollable */
         .main { flex-grow: 1; background: #0a0a0a; overflow: auto; position: relative; }
         #visualizer { display: block; min-width: 100%; }
         
+        /* Sticky button bar pinned to the bottom of the sidebar */
         .btn-group { display: flex; gap: 6px; margin-top: 10px; position: sticky; bottom: 0; background: var(--panel); padding-top: 10px; flex-wrap: wrap; }
         button { border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold; flex: 1 1 45%; font-size: 0.75rem; }
-        .btn-rail { background: var(--accent); color: #000; }
-        .btn-break { background: var(--break); color: #000; }
-        .btn-clone { background: #9c27b0; color: white; flex: 1 1 100%; }
-        .btn-export { background: #2196f3; color: white; flex: 1 1 100%; }
-        .btn-save { background: #00b0ff; color: #000; flex: 1 1 45%; }
-        .btn-load { background: #ffb300; color: #000; flex: 1 1 45%; }
+
+        /* Color-coded action buttons */
+        .btn-rail   { background: var(--accent); color: #000; }   /* Add Rail — green  */
+        .btn-break  { background: var(--break);  color: #000; }   /* Add Break — orange */
+        .btn-clone  { background: #9c27b0; color: white; flex: 1 1 100%; } /* Clone power-down — purple */
+        .btn-export { background: #2196f3; color: white; flex: 1 1 100%; } /* SVG export — blue */
+        .btn-save   { background: #00b0ff; color: #000; flex: 1 1 45%; }   /* Save config — cyan */
+        .btn-load   { background: #ffb300; color: #000; flex: 1 1 45%; }   /* Load config — amber */
         
+        /* Editable filename input displayed in the button bar */
         #configFileName { flex: 1 1 100%; text-align: center; font-weight: bold; font-size: 0.8rem; margin-top: 4px; margin-bottom: 2px; color: #fff; background: #2d2d2d; border: 1px solid #555; padding: 6px; }
         #configFileName:focus { border-color: #00b0ff; outline: none; }
-        .toggle-container { background: #2d2d2d; padding: 8px; border-radius: 6px; margin-bottom: 6px; border: 1px solid #444; display: flex; align-items: center; gap: 12px; font-size: 0.75rem; cursor: pointer; }
-        .mode-indicator { font-weight: 900; padding: 6px; border-radius: 4px; margin: 10px 0 6px 0; text-align: center; font-size: 0.8rem; }
-        .up { background: rgba(0, 230, 118, 0.15); color: var(--accent); border: 1px solid var(--accent); }
-        .down { background: rgba(255, 82, 82, 0.15); color: var(--down); border: 1px solid var(--down); }
 
+        /* Small toggle row used for mode switches (DOWN / B&W) */
+        .toggle-container { background: #2d2d2d; padding: 8px; border-radius: 6px; margin-bottom: 6px; border: 1px solid #444; display: flex; align-items: center; gap: 12px; font-size: 0.75rem; cursor: pointer; }
+
+        /* Pill badge that shows the current mode (POWER UP / POWER DOWN) */
+        .mode-indicator { font-weight: 900; padding: 6px; border-radius: 4px; margin: 10px 0 6px 0; text-align: center; font-size: 0.8rem; }
+        .up   { background: rgba(0, 230, 118, 0.15); color: var(--accent); border: 1px solid var(--accent); } /* Green for power-up  */
+        .down { background: rgba(255, 82, 82,  0.15); color: var(--down);   border: 1px solid var(--down);   } /* Red  for power-down */
+
+        /* Floating color-picker popup panel */
         #colorPopup { display: none; position: absolute; z-index: 1000; background: #222; border: 1px solid #555; padding: 12px; border-radius: 6px; box-shadow: 0 8px 24px rgba(0,0,0,0.8); width: 170px; }
+
+        /* Individual color swatch tiles inside the popup grid */
         .color-swatch { width: 18px; height: 18px; border-radius: 3px; cursor: pointer; border: 1px solid rgba(0,0,0,0.5); }
         .color-swatch:hover { transform: scale(1.1); border-color: #fff; }
     </style>
 </head>
 <body>
 
+<!-- Hidden datalist populated with palette colors for browser color-input suggestions -->
 <datalist id="presetColors"></datalist>
 
+<!-- ── Color Picker Popup ────────────────────────────────────────────────────
+     Appears when the user clicks the colored swatch on a rail card.
+     Contains:
+       • Auto-color toggle checkbox
+       • 7×5 preset swatch grid (hue × shade)
+       • Lightness slider for continuous shading
+       • Native <input type="color"> for arbitrary hex override
+-->
 <div id="colorPopup">
+    <!-- Toggle: if checked the rail's color is managed by the auto-color algorithm -->
     <label style="display:flex; align-items:center; gap:6px; color:#fff; font-size:0.75rem; margin-bottom:10px; cursor:pointer; font-weight:bold;">
         <input type="checkbox" id="popupAutoToggle" onchange="toggleAutoColor()"> Auto Color Assignment
     </label>
+
+    <!-- Preset swatch grid label -->
     <div style="font-size:0.6rem; color:#888; margin-bottom:4px; text-transform:uppercase;">Presets (Hue x Shade)</div>
+    <!-- Swatch grid is populated dynamically by buildColorPopupGrid() -->
     <div id="popupGrid" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:4px; margin-bottom:10px;"></div>
     
+    <!-- Lightness / shade slider section -->
     <div style="border-top:1px solid #444; padding-top:8px; margin-bottom:8px;">
         <label style="font-size:0.65rem; color:#ccc; margin:0 0 4px 0;">Shading Slider (Lightness):</label>
+        <!-- Adjusts only the L channel of the currently active color while preserving H and S -->
         <input type="range" id="popupShadeSlider" min="0" max="100" step="1" oninput="adjustShading(this.value)" style="width:100%; margin:0; padding:0;">
     </div>
     
+    <!-- Custom hex color override via native color picker -->
     <div style="border-top:1px solid #444; padding-top:8px;">
         <label style="font-size:0.65rem; color:#ccc; margin:0 0 4px 0;">Custom Hex Override:</label>
         <input type="color" id="popupCustom" onchange="setCustomColor(this.value)" style="width:100%; height:24px; padding:0; border:none; cursor:pointer;">
     </div>
 </div>
 
+<!-- ── Sidebar Panel ─────────────────────────────────────────────────────────
+     Left column containing all controls:
+       • Mode toggles (Power Down / B&W)
+       • Color algorithm selector
+       • Auto-fit / zoom controls
+       • Full-scale override
+       • Dynamically rendered item cards (#itemList)
+       • Action buttons (add, save, load, clone, export)
+-->
 <div class="sidebar">
     <h2>[ POWER_SEQUENCE_EDITOR ]</h2>
+
+    <!-- Current mode badge: updates via toggleMode() -->
     <div id="modeStatus" class="mode-indicator up">MODE: POWER UP</div>
     
+    <!-- Row 1: Power-down and B&W mode toggles -->
     <div style="display:flex; gap:6px; margin-bottom:6px;">
+        <!-- Power-down mode: reverses signal direction on the diagram -->
         <label class="toggle-container" style="flex:1; margin:0; padding:6px; justify-content:center;">
             <input type="checkbox" id="powerDownMode" onchange="toggleMode()"> 
             <span style="font-size:0.6rem; letter-spacing:-0.5px;">DOWN MODE</span>
         </label>
+        <!-- B&W (datasheet) mode: renders the diagram in black-and-white -->
         <label class="toggle-container" style="flex:1; margin:0; padding:6px; justify-content:center;">
             <input type="checkbox" id="datasheetMode" onchange="render()"> 
             <span style="font-size:0.6rem; letter-spacing:-0.5px;">B&W MODE</span>
         </label>
     </div>
     
+    <!-- Row 2: Auto-color algorithm selector + quick-action buttons -->
     <div style="display:flex; gap:4px; margin-bottom:8px;">
+        <!-- Dropdown that selects which coloring algorithm is applied to auto-color rails -->
         <select id="colorAlgo" onchange="recalcAutoOnly()" style="flex:1.5; margin:0; background:#2d2d2d; color:#fff; border:1px solid #444; border-radius:4px; font-size:0.6rem; padding:4px;">
-            <option value="adjacency">1. Adjacency Max</option>
-            <option value="size">2. Size-Weighted</option>
-            <option value="rainbow">3. Rainbow Cascade</option>
-            <option value="scatter">4. Leaf Scatter</option>
-            <option value="warm">5. Warm Tones</option>
-            <option value="cool">6. Cool Tones</option>
-            <option value="mono_blue">7. Mono Blue</option>
-            <option value="mono_red">8. Mono Red</option>
-            <option value="alternator">9. Alternator</option>
-            <option value="random">10. Randomize</option>
+            <option value="adjacency">1. Adjacency Max</option>   <!-- Maximises hue distance between adjacent groups -->
+            <option value="size">2. Size-Weighted</option>         <!-- Larger groups get more distinct hues -->
+            <option value="rainbow">3. Rainbow Cascade</option>   <!-- Sequential hue cycle -->
+            <option value="scatter">4. Leaf Scatter</option>      <!-- Hue/shade by index position -->
+            <option value="warm">5. Warm Tones</option>           <!-- Preference for reds/oranges/pinks -->
+            <option value="cool">6. Cool Tones</option>           <!-- Preference for blues/cyans/purples -->
+            <option value="mono_blue">7. Mono Blue</option>       <!-- All rails use the blue hue family -->
+            <option value="mono_red">8. Mono Red</option>         <!-- All rails use the red hue family -->
+            <option value="alternator">9. Alternator</option>     <!-- Alternates between two hues -->
+            <option value="random">10. Randomize</option>         <!-- Random hue order seeded on click -->
         </select>
+        <!-- Re-apply current algorithm with a new random seed (only affects auto-color rails) -->
         <button onclick="recalcAutoOnly()" style="flex:1; background:#00b0ff; color:#000; border:none; border-radius:4px; font-size:0.55rem; font-weight:bold; cursor:pointer; padding:4px;" title="Re-roll algo only on Auto traces">🔄 REROLL</button>
+        <!-- Force every auto-color rail to inherit its parent's color -->
         <button onclick="forceInheritColor()" style="flex:1; background:#4caf50; color:#fff; border:none; border-radius:4px; font-size:0.55rem; font-weight:bold; cursor:pointer; padding:4px;" title="Force Auto traces to inherit parent color">🔗 INHERIT</button>
+        <!-- Reset ALL items (including manual overrides) back to auto-color mode -->
         <button onclick="forceAutoColorAll()" style="flex:1; background:#9c27b0; color:#fff; border:none; border-radius:4px; font-size:0.55rem; font-weight:bold; cursor:pointer; padding:4px;" title="Force ALL items back to Auto-Color">🎨 ALL AUTO</button>
     </div>
 
+    <!-- Row 3: Auto-fit toggle + zoom percentage input -->
     <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+        <!-- AUTO FIT: when checked the diagram is scaled to fill the visible canvas width -->
         <label class="toggle-container" style="margin:0; padding:6px 10px; flex-shrink:0;">
-            <input type="checkbox" id="autoScaleX" checked onchange="document.getElementById('zoomPct').value = 100; render();"> 
+            <input type="checkbox" id="autoScaleX" checked onchange="document.getElementById('zoomPct').value = 100; render();">
             <span>AUTO FIT</span>
         </label>
+        <!-- Manual zoom percentage; unchecks AUTO FIT when edited -->
         <div style="display:flex; align-items:center; gap:4px; flex:1; background:#2d2d2d; border:1px solid #444; border-radius:6px; padding:4px 8px;">
             <label style="margin:0; font-size:0.65rem; color:#ccc;">Zoom:</label>
             <input type="number" id="zoomPct" value="100" min="10" step="10" oninput="document.getElementById('autoScaleX').checked = false; render(true);" style="margin:0; text-align:right; border:none; background:transparent; padding:0; font-size:0.8rem; flex:1;">
@@ -146,127 +225,214 @@
         </div>
     </div>
 
+    <!-- Row 4: Full-scale override — forces a fixed total time window on the X axis -->
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+        <!-- Checkbox enables the override; the number input sets the override value in ms -->
+        <label class="toggle-container" style="margin:0; padding:6px 10px; flex-shrink:0;" title="Override the auto-calculated total diagram time scale">
+            <input type="checkbox" id="fullScaleOverride" onchange="render(false);">
+            <span style="font-size:0.6rem; letter-spacing:-0.5px;">SCALE OVR</span>
+        </label>
+        <div style="display:flex; align-items:center; gap:4px; flex:1; background:#2d2d2d; border:1px solid #444; border-radius:6px; padding:4px 8px;">
+            <label style="margin:0; font-size:0.65rem; color:#ccc; white-space:nowrap;">Full&nbsp;Scale:</label>
+            <!-- Typing here auto-enables the override checkbox -->
+            <input type="number" id="fullScaleMs" value="80" min="0.1" step="1"
+                oninput="document.getElementById('fullScaleOverride').checked = true; render(false);"
+                style="margin:0; text-align:right; border:none; background:transparent; padding:0; font-size:0.8rem; flex:1;">
+            <span style="font-size:0.8rem; font-weight:bold; color:#888;">ms</span>
+        </div>
+    </div>
+
+    <!-- Dynamic list of rail/break cards rendered by updateUI() -->
     <div id="itemList"></div>
 
+    <!-- ── Sticky Button Bar ───────────────────────────────────────────────── -->
     <div class="btn-group">
-        <button class="btn-rail" onclick="addItem('rail')">+ RAIL</button>
+        <!-- Add a new voltage rail or a time-break item to the sequence -->
+        <button class="btn-rail"  onclick="addItem('rail')">+ RAIL</button>
         <button class="btn-break" onclick="addItem('break')">+ BREAK</button>
         
+        <!-- Editable filename used when saving/exporting -->
         <input type="text" id="configFileName" value="Randomfish_A1.json" title="Config File Name" />
         
+        <!-- Save current sequence + settings as a JSON file download -->
         <button class="btn-save" onclick="saveConfig()">💾 SAVE CONFIG</button>
+        <!-- Hidden file input opened by the LOAD CONFIG button -->
         <input type="file" id="configFile" accept=".json" style="display: none;" onchange="loadConfig(event)">
+        <!-- Trigger the hidden file input to load a previously saved JSON config -->
         <button class="btn-load" onclick="document.getElementById('configFile').click()">📂 LOAD CONFIG</button>
         
+        <!-- Power-down clone buttons: generate a mirrored power-down sequence -->
         <div style="display:flex; gap:6px; flex: 1 1 100%;">
-            <button class="btn-clone" onclick="cloneToPowerDownFlat()" style="flex:1; font-size:0.6rem; padding:8px 4px;" title="Reverse all rails into a single flat chain">🔄 CLONE PD - FLAT</button>
+            <!-- FLAT: reverses all rails into a single linear chain -->
+            <button class="btn-clone" onclick="cloneToPowerDownFlat()"   style="flex:1; font-size:0.6rem; padding:8px 4px;" title="Reverse all rails into a single flat chain">🔄 CLONE PD - FLAT</button>
+            <!-- GROUPS: reverses PSEQ leaders while preserving group membership -->
             <button class="btn-clone" onclick="cloneToPowerDownGroups()" style="flex:1; font-size:0.6rem; padding:8px 4px;" title="Reverse PSEQ leaders, keeping groups intact">🔄 CLONE PD - GROUPS</button>
         </div>
         
+        <!-- Export the rendered SVG diagram as an .svg file download -->
         <button class="btn-export" onclick="exportSVG()">💾 EXPORT TO SVG</button>
     </div>
 </div>
 
+<!-- ── SVG Canvas ────────────────────────────────────────────────────────────
+     The <svg> element is sized and filled entirely by the render() function.
+     Scrolling is handled by the .main wrapper div.
+-->
 <div class="main"><svg id="visualizer" xmlns="http://www.w3.org/2000/svg"></svg></div>
 
 <script>
+    // ── Color Palette Matrix ─────────────────────────────────────────────────
+    // A 7-hue × 5-shade grid of pre-selected colors.
+    //   Rows  (0-6): Red, Orange, Green, Cyan, Blue, Purple, Pink
+    //   Cols  (0-4): Lightest → Darkest shade per hue
+    // Used by both the color-picker swatch grid and the auto-color algorithms.
     const PALETTE_MATRIX = [
-        ['#FF8A80', '#FF5252', '#FF0000', '#C50000', '#8B0000'], 
-        ['#FFE57F', '#FFD180', '#FF9100', '#FF6D00', '#E65100'], 
-        ['#B9F6CA', '#69F0AE', '#00E676', '#00C853', '#1B5E20'], 
-        ['#84FFFF', '#18FFFF', '#00E5FF', '#00B8D4', '#006064'], 
-        ['#82B1FF', '#448AFF', '#2979FF', '#2962FF', '#0D47A1'], 
-        ['#B388FF', '#7C4DFF', '#651FFF', '#6200EA', '#311B92'], 
-        ['#FFB6C1', '#FF80AB', '#FF4081', '#F50057', '#C51162']  
+        ['#FF8A80', '#FF5252', '#FF0000', '#C50000', '#8B0000'], // 0 – Red
+        ['#FFE57F', '#FFD180', '#FF9100', '#FF6D00', '#E65100'], // 1 – Orange
+        ['#B9F6CA', '#69F0AE', '#00E676', '#00C853', '#1B5E20'], // 2 – Green
+        ['#84FFFF', '#18FFFF', '#00E5FF', '#00B8D4', '#006064'], // 3 – Cyan
+        ['#82B1FF', '#448AFF', '#2979FF', '#2962FF', '#0D47A1'], // 4 – Blue
+        ['#B388FF', '#7C4DFF', '#651FFF', '#6200EA', '#311B92'], // 5 – Purple
+        ['#FFB6C1', '#FF80AB', '#FF4081', '#F50057', '#C51162']  // 6 – Pink
     ];
 
+    // ── Sequence Data ────────────────────────────────────────────────────────
+    // Central array of all items (rails and breaks) in the diagram.
+    // Each rail object:
+    //   type       – 'rail'
+    //   id         – unique string identifier
+    //   name       – label displayed on the diagram
+    //   delay      – base delay in ms after the trigger point
+    //   rise       – ramp-up (or ramp-down) duration in ms
+    //   color      – current hex color string
+    //   colorMode  – 'auto' (managed by algorithm) | 'manual' (user-set)
+    //   parentId   – id of the rail that triggers this one, or 'none'
+    //   triggerPct – percentage of the parent's rise at which this rail triggers (0-100)
+    //   addDelay   – extra delay added on top of the base delay
     let sequence = [
-        { type: 'rail', id: 'r1', name: '12V_VIN', delay: 0, rise: 5, color: PALETTE_MATRIX[5][2], colorMode: 'auto', parentId: 'none', triggerPct: 100, addDelay: 0 },
-        { type: 'rail', id: 'r2', name: '3V3_SYS', delay: 20, rise: 10, color: PALETTE_MATRIX[5][3], colorMode: 'auto', parentId: 'r1', triggerPct: 100, addDelay: 0 },
-        { type: 'rail', id: 'r3', name: '1V8_CORE', delay: 15, rise: 8, color: PALETTE_MATRIX[5][4], colorMode: 'auto', parentId: 'r2', triggerPct: 100, addDelay: 0 }
+        { type: 'rail', id: 'r1', name: '12V_VIN',   delay: 0,  rise: 5,  color: PALETTE_MATRIX[5][2], colorMode: 'auto', parentId: 'none', triggerPct: 100, addDelay: 0 },
+        { type: 'rail', id: 'r2', name: '3V3_SYS',   delay: 20, rise: 10, color: PALETTE_MATRIX[5][3], colorMode: 'auto', parentId: 'r1',   triggerPct: 100, addDelay: 0 },
+        { type: 'rail', id: 'r3', name: '1V8_CORE',  delay: 15, rise: 8,  color: PALETTE_MATRIX[5][4], colorMode: 'auto', parentId: 'r2',   triggerPct: 100, addDelay: 0 }
     ];
 
-    let activeColorItemId = null;
-    let activeHue = 0; 
-    let activeSat = 0; 
+    // ── Color Popup State ────────────────────────────────────────────────────
+    let activeColorItemId = null; // id of the rail whose color popup is open
+    let activeHue = 0;            // HSL hue (0-360) of that rail's current color
+    let activeSat = 0;            // HSL saturation (0-100) of that rail's current color
     
-    window.currentSCALE = 5;
+    // ── Global Rendering State ───────────────────────────────────────────────
+    window.currentSCALE = 5;      // pixels-per-ms; updated on every render() call
+
+    // Shuffled hue index array (0-6) used by the 'random' color algorithm.
+    // Re-shuffled whenever the user clicks REROLL or ALL AUTO.
     window.randomHueSeed = [0,1,2,3,4,5,6].sort(() => Math.random() - 0.5);
 
+    // Re-render (without zooming) whenever the browser window is resized
     window.addEventListener('resize', () => render(false));
+
+    // Initialise the color-picker swatch grid and apply auto-colors to default sequence
     buildColorPopupGrid();
     applyAutoColors();
 
+    // ── buildColorPopupGrid() ────────────────────────────────────────────────
+    // Populates the floating color-picker popup with:
+    //   • A 7×5 grid of clickable color swatches (iterates shade-first so
+    //     each column in the grid is one shade and each row is one hue).
+    //   • A hidden <datalist> so native <input type="color"> shows palette hints.
     function buildColorPopupGrid() {
-        let gridHTML = '';
+        let gridHTML     = '';
         let datalistHTML = '';
-        for(let s = 0; s < 5; s++) {
-            for(let h = 0; h < 7; h++) {
+        for(let s = 0; s < 5; s++) {          // shade index (lightest → darkest)
+            for(let h = 0; h < 7; h++) {       // hue index (Red → Pink)
                 let c = PALETTE_MATRIX[h][s];
-                gridHTML += `<div class="color-swatch" style="background:${c};" onclick="setPopupColor('${c}')" title="Hue ${h}, Shade ${s}"></div>`;
+                gridHTML     += `<div class="color-swatch" style="background:${c};" onclick="setPopupColor('${c}')" title="Hue ${h}, Shade ${s}"></div>`;
                 datalistHTML += `<option value="${c}"></option>`;
             }
         }
-        document.getElementById('popupGrid').innerHTML = gridHTML;
+        document.getElementById('popupGrid').innerHTML    = gridHTML;
         document.getElementById('presetColors').innerHTML = datalistHTML;
     }
 
+    // ── hexToHSL(hex) ────────────────────────────────────────────────────────
+    // Converts a CSS hex color string (e.g. "#FF5252") to an HSL array
+    // [hue°, saturation%, lightness%].
+    // Used to initialise the shade slider when the popup opens.
     function hexToHSL(hex) {
+        // Parse the three 8-bit color channels from the hex string
         let r = parseInt(hex.slice(1,3), 16) / 255;
         let g = parseInt(hex.slice(3,5), 16) / 255;
         let b = parseInt(hex.slice(5,7), 16) / 255;
+
         let max = Math.max(r, g, b), min = Math.min(r, g, b);
-        let h, s, l = (max + min) / 2;
-        if(max === min) { h = s = 0; }
-        else {
+        let h, s, l = (max + min) / 2; // Lightness = average of max and min channel
+
+        if(max === min) {
+            h = s = 0; // Achromatic (grey): no hue or saturation
+        } else {
             let d = max - min;
+            // Saturation formula differs depending on whether lightness is above/below 0.5
             s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            // Hue derived from which channel is the maximum
             switch(max) {
                 case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-                case g: h = (b - r) / d + 2; break;
-                case b: h = (r - g) / d + 4; break;
+                case g: h = (b - r) / d + 2;                break;
+                case b: h = (r - g) / d + 4;                break;
             }
-            h /= 6;
+            h /= 6; // Normalise to [0, 1]
         }
-        return [h * 360, s * 100, l * 100];
+        return [h * 360, s * 100, l * 100]; // Return in CSS degree/percent units
     }
 
+    // ── HSLToHex(h, s, l) ───────────────────────────────────────────────────
+    // Converts HSL values (h in degrees, s and l in %) to an uppercase hex string.
+    // Used by adjustShading() to recolor a rail when the lightness slider moves.
     function HSLToHex(h, s, l) {
-        l /= 100;
-        const a = s * Math.min(l, 1 - l) / 100;
+        l /= 100; // Normalise lightness to [0, 1]
+        const a = s * Math.min(l, 1 - l) / 100; // Chroma factor
+        // Inner helper: compute one RGB channel given an offset n (0=R, 8=G, 4=B)
         const f = n => {
-            const k = (n + h / 30) % 12;
+            const k     = (n + h / 30) % 12;
             const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
             return Math.round(255 * color).toString(16).padStart(2, '0');
         };
         return `#${f(0)}${f(8)}${f(4)}`.toUpperCase();
     }
 
+    // ── openColorPopup(id, btnElement) ──────────────────────────────────────
+    // Opens the floating color picker popup for the rail identified by `id`.
+    // Positions it near the swatch button that was clicked.
     function openColorPopup(id, btnElement) {
         activeColorItemId = id;
         const item = sequence.find(i => i.id === id);
         
+        // Reflect the item's current state in the popup controls
         document.getElementById('popupAutoToggle').checked = (item.colorMode === 'auto');
-        document.getElementById('popupCustom').value = item.color;
+        document.getElementById('popupCustom').value       = item.color;
         
+        // Decode the current color to initialise the shade slider
         let [h, s, l] = hexToHSL(item.color);
-        activeHue = h; 
+        activeHue = h;
         activeSat = s;
         document.getElementById('popupShadeSlider').value = l;
         
-        const rect = btnElement.getBoundingClientRect();
+        // Position the popup to the right of the clicked swatch button
+        const rect  = btnElement.getBoundingClientRect();
         const popup = document.getElementById('colorPopup');
         popup.style.display = 'block';
-        popup.style.left = (rect.left + 30) + 'px';
-        popup.style.top = (rect.top - 10) + 'px';
+        popup.style.left    = (rect.left + 30) + 'px';
+        popup.style.top     = (rect.top  - 10) + 'px';
     }
 
+    // Close the color popup whenever the user clicks anywhere outside it
     document.addEventListener('click', (e) => {
         if(!e.target.closest('#colorPopup') && !e.target.closest('.color-btn')) {
             document.getElementById('colorPopup').style.display = 'none';
         }
     });
 
+    // ── forceAutoColorAll() ──────────────────────────────────────────────────
+    // Resets every rail's colorMode to 'auto', generates a new random hue seed,
+    // then re-runs the auto-color algorithm and refreshes the UI.
     function forceAutoColorAll() {
         window.randomHueSeed = [0,1,2,3,4,5,6].sort(() => Math.random() - 0.5);
         sequence.forEach(item => {
@@ -276,15 +442,21 @@
         updateUI();
     }
 
+    // ── recalcAutoOnly() ────────────────────────────────────────────────────
+    // Re-runs the auto-color algorithm (with a fresh random seed) for rails
+    // that are already in 'auto' mode, leaving manually overridden rails intact.
     function recalcAutoOnly() {
         window.randomHueSeed = [0,1,2,3,4,5,6].sort(() => Math.random() - 0.5);
         applyAutoColors();
         updateUI();
     }
     
+    // ── forceInheritColor() ──────────────────────────────────────────────────
+    // Propagates each auto-color rail's color from its parent, repeating up to
+    // 10 passes to handle deep parent chains.  Stops early when nothing changes.
     function forceInheritColor() {
         let changed = true;
-        let passes = 0;
+        let passes  = 0;
         while(changed && passes < 10) {
             changed = false;
             sequence.forEach(item => {
@@ -292,7 +464,7 @@
                     let parent = sequence.find(i => i.id === item.parentId);
                     if (parent && parent.color !== item.color) {
                         item.color = parent.color;
-                        changed = true;
+                        changed    = true;
                     }
                 }
             });
@@ -301,45 +473,60 @@
         updateUI();
     }
 
+    // ── toggleAutoColor() ────────────────────────────────────────────────────
+    // Called when the "Auto Color Assignment" checkbox in the popup changes.
+    // Switches the active rail between 'auto' and 'manual' colorMode.
     function toggleAutoColor() {
         if(!activeColorItemId) return;
-        const item = sequence.find(i => i.id === activeColorItemId);
-        let isAuto = document.getElementById('popupAutoToggle').checked;
+        const item   = sequence.find(i => i.id === activeColorItemId);
+        let isAuto   = document.getElementById('popupAutoToggle').checked;
         item.colorMode = isAuto ? 'auto' : 'manual';
-        if(isAuto) applyAutoColors();
+        if(isAuto) applyAutoColors(); // Immediately re-derive color from the algorithm
         updateUI();
     }
 
+    // ── setPopupColor(hex) ───────────────────────────────────────────────────
+    // Applies a specific hex color to the active rail (switches it to 'manual'),
+    // and syncs all popup controls (checkbox, hex input, slider) to match.
     function setPopupColor(hex) {
         if(!activeColorItemId) return;
-        const item = sequence.find(i => i.id === activeColorItemId);
+        const item     = sequence.find(i => i.id === activeColorItemId);
         item.colorMode = 'manual';
-        item.color = hex;
+        item.color     = hex;
         
+        // Decode the chosen color so the shade slider can adjust from this baseline
         let [h, s, l] = hexToHSL(hex);
-        activeHue = h; 
+        activeHue = h;
         activeSat = s;
         
         document.getElementById('popupAutoToggle').checked = false;
-        document.getElementById('popupCustom').value = hex;
-        document.getElementById('popupShadeSlider').value = l;
+        document.getElementById('popupCustom').value       = hex;
+        document.getElementById('popupShadeSlider').value  = l;
         updateUI();
     }
 
+    // Thin wrapper so the native color input can call setPopupColor directly
     function setCustomColor(hex) { setPopupColor(hex); }
 
+    // ── adjustShading(lightnessVal) ──────────────────────────────────────────
+    // Called when the shade slider moves.  Reconstructs the hex color from the
+    // cached hue/saturation + the new lightness value, then applies it.
     function adjustShading(lightnessVal) {
         if(!activeColorItemId) return;
-        const item = sequence.find(i => i.id === activeColorItemId);
-        let newHex = HSLToHex(activeHue, activeSat, parseFloat(lightnessVal));
+        const item     = sequence.find(i => i.id === activeColorItemId);
+        let newHex     = HSLToHex(activeHue, activeSat, parseFloat(lightnessVal));
         
         item.colorMode = 'manual';
-        item.color = newHex;
+        item.color     = newHex;
         document.getElementById('popupAutoToggle').checked = false;
-        document.getElementById('popupCustom').value = newHex;
-        updateUI(); 
+        document.getElementById('popupCustom').value       = newHex;
+        updateUI();
     }
 
+    // ── toggleMute(id) ───────────────────────────────────────────────────────
+    // Toggles the `muted` flag on a break item.  Muted breaks are excluded from
+    // the rendered diagram (no visual gap, no time compression) but remain in
+    // the sequence list so they can be re-enabled later.
     function toggleMute(id) {
         const item = sequence.find(i => i.id === id);
         if (item) {
@@ -349,26 +536,46 @@
         }
     }
 
+    // ── applyAutoColors() ────────────────────────────────────────────────────
+    // Assigns colors to all rails whose colorMode === 'auto'.
+    // Algorithm overview:
+    //   1. Identify "leader" nodes: rails that have at least one child are
+    //      leaders; leaf rails are grouped under their parent leader.
+    //   2. Assign a hue index (0-6) to each leader based on the selected
+    //      algorithm (adjacency, size, rainbow, mono, random, etc.).
+    //   3. Assign a shade index (0-4) from SHADE_SEQ to each rail within
+    //      a group; the leader itself always gets shade 2 (mid-tone).
+    //   4. Rails with colorMode === 'manual' keep their user-chosen color;
+    //      only their hue is snapped to the nearest palette hue so that
+    //      adjacency constraints can still respect manually set neighbors.
     function applyAutoColors() {
         let rails = sequence.filter(i => i.type === 'rail');
         if (rails.length === 0) return;
 
         let algo = document.getElementById('colorAlgo') ? document.getElementById('colorAlgo').value : 'adjacency';
 
+        // Determine which rails have at least one child (are "leaders" of a group)
         let hasChildren = {};
         rails.forEach(r => hasChildren[r.id] = rails.some(child => child.parentId === r.id));
 
-        let hueLeaders = {};
-        let orderedLeaders = [];
+        // Map every rail to its group leader; collect ordered list of leaders
+        let hueLeaders     = {}; // rail id → leader id
+        let orderedLeaders = []; // leaders in sequence order (for adjacency calc)
         
         rails.forEach(r => {
-            let leaderId = hasChildren[r.id] ? r.id : (r.parentId !== 'none' && rails.some(p => p.id === r.parentId) ? r.parentId : r.id);
+            let leaderId = hasChildren[r.id]
+                ? r.id                                                                  // This rail is a leader
+                : (r.parentId !== 'none' && rails.some(p => p.id === r.parentId)
+                    ? r.parentId                                                        // Parent is the leader
+                    : r.id);                                                            // Orphan — acts as its own leader
             hueLeaders[r.id] = leaderId;
             if (!orderedLeaders.includes(leaderId)) orderedLeaders.push(leaderId);
         });
 
-        let leaderHues = {};
-        let hueUsageCount = [0,0,0,0,0,0,0];
+        // Pre-assign hue indices for leaders that are manually colored.
+        // Snap them to the nearest palette hue so the adjacency graph is consistent.
+        let leaderHues    = {};      // leader id → hue index (0-6)
+        let hueUsageCount = [0,0,0,0,0,0,0]; // tracks how often each hue is used
 
         orderedLeaders.forEach(leaderId => {
             let leaderRail = rails.find(r => r.id === leaderId);
@@ -385,41 +592,51 @@
             }
         });
 
+        // ── Hue assignment per algorithm ─────────────────────────────────────
+
         if (algo === 'adjacency' || algo === 'warm' || algo === 'cool' || algo === 'alternator') {
+            // Build an adjacency graph: two leaders are adjacent when their rails
+            // appear next to each other in the sequence list.
             let adjacency = {};
             orderedLeaders.forEach(id => adjacency[id] = new Set());
             for (let i = 1; i < rails.length; i++) {
                 let prevLeader = hueLeaders[rails[i-1].id];
-                let curLeader = hueLeaders[rails[i].id];
+                let curLeader  = hueLeaders[rails[i].id];
                 if (prevLeader !== curLeader) {
                     adjacency[prevLeader].add(curLeader);
                     adjacency[curLeader].add(prevLeader);
                 }
             }
             
-            let PREF_ORDER = [0, 4, 1, 5, 2, 6, 3]; 
-            if (algo === 'warm') PREF_ORDER = [0, 1, 6, 2]; 
-            if (algo === 'cool') PREF_ORDER = [4, 3, 5, 2]; 
-            if (algo === 'alternator') PREF_ORDER = [0, 3]; 
+            // Each algorithm uses a different preferred ordering of hue indices.
+            // The greedy assignment maximises the minimum hue distance to already-assigned neighbors.
+            let PREF_ORDER = [0, 4, 1, 5, 2, 6, 3]; // default: max spread across the wheel
+            if (algo === 'warm')       PREF_ORDER = [0, 1, 6, 2]; // reds → oranges → pinks
+            if (algo === 'cool')       PREF_ORDER = [4, 3, 5, 2]; // blues → cyans → purples
+            if (algo === 'alternator') PREF_ORDER = [0, 3];        // alternates red ↔ cyan
             
             orderedLeaders.forEach(leaderId => {
-                if (leaderHues[leaderId] !== undefined) return; 
-                let neighbors = Array.from(adjacency[leaderId]);
-                let bestHue = PREF_ORDER[0];
+                if (leaderHues[leaderId] !== undefined) return; // already pinned (manual color)
+                let neighbors  = Array.from(adjacency[leaderId]);
+                let bestHue    = PREF_ORDER[0];
                 let maxMinDist = -1;
                 
+                // Greedy: pick the candidate hue with the maximum minimum distance
+                // to all already-assigned adjacent leaders.
                 for (let candidate of PREF_ORDER) {
-                    let minDistToNeighbor = 7; 
+                    let minDistToNeighbor = 7; // worst case: all 7 hues adjacent
                     for (let n of neighbors) {
                         if (leaderHues[n] !== undefined) {
+                            // Circular distance on the 7-hue wheel
                             let dist = Math.min(Math.abs(candidate - leaderHues[n]), 7 - Math.abs(candidate - leaderHues[n]));
                             if (dist < minDistToNeighbor) minDistToNeighbor = dist;
                         }
                     }
                     if (minDistToNeighbor > maxMinDist) {
                         maxMinDist = minDistToNeighbor;
-                        bestHue = candidate;
+                        bestHue    = candidate;
                     } else if (minDistToNeighbor === maxMinDist) {
+                        // Break ties by choosing the least-used hue
                         if (hueUsageCount[candidate] < hueUsageCount[bestHue]) bestHue = candidate;
                     }
                 }
@@ -428,51 +645,62 @@
             });
         } 
         else if (algo === 'size') {
-            let groupSizes = {};
+            // Assign the most distinct hues to the largest groups first
+            let groupSizes   = {};
             rails.forEach(r => groupSizes[hueLeaders[r.id]] = (groupSizes[hueLeaders[r.id]] || 0) + 1);
             let sortedLeaders = [...orderedLeaders].sort((a, b) => groupSizes[b] - groupSizes[a]);
-            const HUE_SEQ = [0, 4, 2, 6, 1, 5, 3];
+            const HUE_SEQ = [0, 4, 2, 6, 1, 5, 3]; // evenly spread hues
             let c = 0;
             sortedLeaders.forEach(leaderId => {
                 if (leaderHues[leaderId] === undefined) leaderHues[leaderId] = HUE_SEQ[c++ % 7];
             });
         }
         else if (algo === 'rainbow') {
+            // Simple sequential hue assignment in appearance order
             let c = 0;
             orderedLeaders.forEach(leaderId => {
                 if (leaderHues[leaderId] === undefined) leaderHues[leaderId] = (c++) % 7;
             });
         }
         else if (algo === 'mono_blue') {
+            // Force every leader to the blue hue (index 4)
             orderedLeaders.forEach(leaderId => { if (leaderHues[leaderId] === undefined) leaderHues[leaderId] = 4; });
         }
         else if (algo === 'mono_red') {
+            // Force every leader to the red hue (index 0)
             orderedLeaders.forEach(leaderId => { if (leaderHues[leaderId] === undefined) leaderHues[leaderId] = 0; });
         }
         else if (algo === 'random') {
+            // Assign hues from the pre-shuffled randomHueSeed array
             let c = 0;
             orderedLeaders.forEach(leaderId => {
                 if (leaderHues[leaderId] === undefined) leaderHues[leaderId] = window.randomHueSeed[c++ % 7];
             });
         }
 
+        // ── Shade assignment ─────────────────────────────────────────────────
         let shadeCounters = {};
-        const SHADE_SEQ = [4, 0, 3, 1]; 
+        // Shade sequence used for non-leader rails within a group.
+        // Starts at darkest (4), then lightest (0), stepping toward mid-tones.
+        const SHADE_SEQ = [4, 0, 3, 1];
 
         rails.forEach((r, idx) => {
+            // Back-fill colorMode for any legacy items loaded without it
             if (!r.colorMode) r.colorMode = r.color ? 'manual' : 'auto';
 
             if (r.colorMode === 'auto') {
                 if (algo === 'scatter') {
+                    // Each rail independently picks a hue+shade by its position index
                     r.color = PALETTE_MATRIX[idx % 7][idx % 5];
                 } else {
                     let leaderId = hueLeaders[r.id];
-                    let hue = leaderHues[leaderId];
+                    let hue      = leaderHues[leaderId];
                     let shade;
 
                     if (r.id === leaderId) {
-                        shade = 2; 
+                        shade = 2; // Leaders get the mid-shade (most recognisable)
                     } else {
+                        // Non-leaders cycle through SHADE_SEQ within their group
                         if (shadeCounters[leaderId] === undefined) shadeCounters[leaderId] = 0;
                         shade = SHADE_SEQ[shadeCounters[leaderId]++ % 4];
                     }
@@ -482,35 +710,47 @@
         });
     }
 
+    // ── getHexDistance(h1, h2) ───────────────────────────────────────────────
+    // Returns the squared Euclidean RGB distance between two hex color strings.
+    // Used to snap a manually set color to the nearest palette hue.
     function getHexDistance(h1, h2) {
         let r1 = parseInt(h1.slice(1,3), 16), g1 = parseInt(h1.slice(3,5), 16), b1 = parseInt(h1.slice(5,7), 16);
         let r2 = parseInt(h2.slice(1,3), 16), g2 = parseInt(h2.slice(3,5), 16), b2 = parseInt(h2.slice(5,7), 16);
         return (r1-r2)**2 + (g1-g2)**2 + (b1-b2)**2;
     }
 
+    // ── saveConfig() ─────────────────────────────────────────────────────────
+    // Serialises the current sequence and UI settings into a JSON object, then
+    // triggers a browser file download of that JSON.
     function saveConfig() {
+        // Bundle all relevant state into a versioned config object
         const configData = {
             version: "1.23",
             settings: {
-                isPowerDownMode: document.getElementById('powerDownMode').checked,
-                isBWMode: document.getElementById('datasheetMode').checked,
-                autoScaleX: document.getElementById('autoScaleX').checked,
-                zoomPct: document.getElementById('zoomPct').value,
-                colorAlgo: document.getElementById('colorAlgo').value
+                isPowerDownMode:    document.getElementById('powerDownMode').checked,
+                isBWMode:           document.getElementById('datasheetMode').checked,
+                autoScaleX:         document.getElementById('autoScaleX').checked,
+                zoomPct:            document.getElementById('zoomPct').value,
+                colorAlgo:          document.getElementById('colorAlgo').value,
+                fullScaleOverride:  document.getElementById('fullScaleOverride').checked,
+                fullScaleMs:        document.getElementById('fullScaleMs').value
             },
             sequence: sequence
         };
 
+        // Create a Blob and temporary object URL to trigger the download
         const jsonString = JSON.stringify(configData, null, 4);
-        const blob = new Blob([jsonString], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
+        const blob       = new Blob([jsonString], { type: "application/json" });
+        const url        = URL.createObjectURL(blob);
         
+        // Ensure the filename ends with .json
         let filename = document.getElementById('configFileName').value.trim();
-        if (!filename) filename = "Randomfish_A1.json"; 
-        if (!filename.toLowerCase().endsWith('.json')) filename += ".json"; 
+        if (!filename) filename = "Randomfish_A1.json";
+        if (!filename.toLowerCase().endsWith('.json')) filename += ".json";
 
+        // Create a temporary link element, click it, then clean up
         const a = document.createElement('a');
-        a.href = url;
+        a.href  = url;
         a.download = filename;
         document.body.appendChild(a);
         a.click();
@@ -518,6 +758,9 @@
         URL.revokeObjectURL(url);
     }
 
+    // ── loadConfig(event) ────────────────────────────────────────────────────
+    // Reads a JSON config file chosen via the hidden <input type="file"> and
+    // restores the sequence and UI settings from it.
     function loadConfig(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -530,32 +773,37 @@
                 if (loadedData && Array.isArray(loadedData.sequence)) {
                     sequence = loadedData.sequence;
                     
+                    // Restore UI controls if settings block is present
                     if (loadedData.settings) {
-                        document.getElementById('powerDownMode').checked = !!loadedData.settings.isPowerDownMode;
-                        document.getElementById('datasheetMode').checked = !!loadedData.settings.isBWMode;
-                        document.getElementById('autoScaleX').checked = !!loadedData.settings.autoScaleX;
-                        if (loadedData.settings.zoomPct) document.getElementById('zoomPct').value = loadedData.settings.zoomPct;
-                        if (loadedData.settings.colorAlgo) document.getElementById('colorAlgo').value = loadedData.settings.colorAlgo;
+                        document.getElementById('powerDownMode').checked   = !!loadedData.settings.isPowerDownMode;
+                        document.getElementById('datasheetMode').checked   = !!loadedData.settings.isBWMode;
+                        document.getElementById('autoScaleX').checked      = !!loadedData.settings.autoScaleX;
+                        if (loadedData.settings.zoomPct)         document.getElementById('zoomPct').value        = loadedData.settings.zoomPct;
+                        if (loadedData.settings.colorAlgo)       document.getElementById('colorAlgo').value      = loadedData.settings.colorAlgo;
+                        document.getElementById('fullScaleOverride').checked = !!loadedData.settings.fullScaleOverride;
+                        if (loadedData.settings.fullScaleMs)     document.getElementById('fullScaleMs').value    = loadedData.settings.fullScaleMs;
                     }
                     
+                    // Use the loaded file's name as the save filename
                     document.getElementById('configFileName').value = file.name;
                     
+                    // Back-fill missing properties introduced in later versions
                     sequence.forEach(item => {
                         if (item.type === 'break') {
-                            if (item.startTime === undefined) item.startTime = 1; 
-                            if (item.muted === undefined) item.muted = false;
+                            if (item.startTime === undefined) item.startTime = 1;  // default start
+                            if (item.muted     === undefined) item.muted     = false;
                         }
                         if (item.type === 'rail' && !item.colorMode) {
                             item.colorMode = item.color ? 'manual' : 'auto';
                         }
                     });
 
-                    toggleMode(); 
+                    // Sync the mode indicator badge with the loaded setting
+                    toggleMode();
                     
+                    // Run auto-color algorithm if any rail is missing a color value
                     let needsColor = sequence.some(i => i.type === 'rail' && !i.color);
-                    if (needsColor) {
-                        applyAutoColors(); 
-                    }
+                    if (needsColor) applyAutoColors();
                     
                     updateUI();
                 } else {
@@ -566,27 +814,38 @@
             }
         };
         reader.readAsText(file);
-        event.target.value = '';
+        event.target.value = ''; // Reset file input so the same file can be reloaded
     }
 
+    // ── toggleMode() ─────────────────────────────────────────────────────────
+    // Updates the mode-indicator badge text/style and triggers a re-render.
+    // Called whenever the Power Down Mode checkbox changes.
     function toggleMode() {
         const isDown = document.getElementById('powerDownMode').checked;
         const status = document.getElementById('modeStatus');
-        status.innerText = isDown ? "MODE: POWER DOWN" : "MODE: POWER UP";
-        status.className = `mode-indicator ${isDown ? 'down' : 'up'}`;
+        status.innerText  = isDown ? "MODE: POWER DOWN" : "MODE: POWER UP";
+        status.className  = `mode-indicator ${isDown ? 'down' : 'up'}`;
         render(false);
     }
 
+    // ── cloneToPowerDownFlat() ────────────────────────────────────────────────
+    // Generates a power-down sequence from the current sequence by:
+    //   1. Extracting only rail items (breaks are preserved as-is).
+    //   2. Reversing the rail order.
+    //   3. Rewiring parentId so every rail triggers after the previous one
+    //      (a simple linear/flat chain — no groups preserved).
+    // Activates power-down mode and refreshes the UI.
     function cloneToPowerDownFlat() {
         let railsOnly = sequence.filter(i => i.type === 'rail');
-        let breaks = sequence.filter(i => i.type === 'break');
-        railsOnly.reverse();
+        let breaks    = sequence.filter(i => i.type === 'break');
+        railsOnly.reverse(); // Last rail on → first rail off
         
         let newSequence = [];
         railsOnly.forEach((rail, index) => {
             newSequence.push({
                 ...rail,
-                id: 'dn_' + rail.id,
+                id:       'dn_' + rail.id,
+                // First item has no parent; subsequent items chain to the previous one
                 parentId: index === 0 ? 'none' : 'dn_' + railsOnly[index-1].id
             });
         });
@@ -597,24 +856,34 @@
         updateUI();
     }
 
+    // ── cloneToPowerDownGroups() ─────────────────────────────────────────────
+    // Like cloneToPowerDownFlat but preserves group membership:
+    //   • Root rails (no valid parent in the sequence) are placed first.
+    //     Their immediate leaf children are reversed and kept attached.
+    //   • Internal leaders (have children but also have a parent) are reversed
+    //     and chained after the roots; their own leaves are reversed and kept.
+    // This mirrors the sequencing logic in grouped power-on trees.
     function cloneToPowerDownGroups() {
-        let rails = sequence.filter(i => i.type === 'rail');
+        let rails  = sequence.filter(i => i.type === 'rail');
         let breaks = sequence.filter(i => i.type === 'break');
         if (rails.length === 0) return;
 
+        // Determine which rails have at least one child
         let isLeader = {};
         rails.forEach(r => {
             isLeader[r.id] = rails.some(child => child.parentId === r.id);
         });
 
+        // A rail is a root if its parentId is 'none' or its parent isn't in the current sequence
         const isRoot = (r) => r.parentId === 'none' || !rails.some(p => p.id === r.parentId);
 
-        let roots = rails.filter(r => isRoot(r));
-        let internalLeaders = rails.filter(r => isLeader[r.id] && !isRoot(r));
-        let leaves = rails.filter(r => !isLeader[r.id] && !isRoot(r));
+        let roots           = rails.filter(r =>  isRoot(r));
+        let internalLeaders = rails.filter(r =>  isLeader[r.id] && !isRoot(r));
+        let leaves          = rails.filter(r => !isLeader[r.id] && !isRoot(r));
 
         let newSequence = [];
 
+        // Place each root at the start with its directly attached leaves (reversed)
         roots.forEach(root => {
             newSequence.push({ ...root, id: 'dn_' + root.id, parentId: 'none' });
             let rootLeaves = leaves.filter(l => l.parentId === root.id);
@@ -623,13 +892,16 @@
             });
         });
 
+        // Reverse the internal leaders and chain them after the roots
         let reversedLeaders = internalLeaders.slice().reverse();
-        let lastRootId = roots.length > 0 ? 'dn_' + roots[roots.length - 1].id : 'none';
+        let lastRootId      = roots.length > 0 ? 'dn_' + roots[roots.length - 1].id : 'none';
 
         reversedLeaders.forEach((leader, index) => {
+            // Each leader's parent is either the last root or the previous reversed leader
             let newParentId = index === 0 ? lastRootId : 'dn_' + reversedLeaders[index - 1].id;
             newSequence.push({ ...leader, id: 'dn_' + leader.id, parentId: newParentId });
 
+            // Attach this leader's leaves (reversed) immediately after it
             let myLeaves = leaves.filter(l => l.parentId === leader.id);
             myLeaves.slice().reverse().forEach(l => {
                 newSequence.push({ ...l, id: 'dn_' + l.id, parentId: 'dn_' + leader.id });
@@ -642,136 +914,177 @@
         updateUI();
     }
 
+    // ── addItem(type) ────────────────────────────────────────────────────────
+    // Appends a new rail or break item to the sequence array with sensible defaults,
+    // then re-runs auto-color (for rails) and refreshes the UI.
     function addItem(type) {
-        const id = 'id' + Math.random().toString(36).substr(2, 5);
+        const id = 'id' + Math.random().toString(36).substr(2, 5); // Short random unique id
         if (type === 'rail') {
-            const last = sequence.filter(r => r.type === 'rail').pop();
-            sequence.push({ type: 'rail', id, name: 'NEW_RAIL', delay: 10, rise: 5, colorMode: 'auto', color: '#fff', parentId: last ? last.id : 'none', triggerPct: 100, addDelay: 0 });
-            applyAutoColors(); 
+            const last = sequence.filter(r => r.type === 'rail').pop(); // Attach to last rail by default
+            sequence.push({
+                type: 'rail', id, name: 'NEW_RAIL', delay: 10, rise: 5,
+                colorMode: 'auto', color: '#fff',
+                parentId:  last ? last.id : 'none',
+                triggerPct: 100, addDelay: 0
+            });
+            applyAutoColors(); // Give the new rail a color immediately
         } else {
+            // Break defaults: starts at t=1ms, spans 2ms, renders 40px wide
             sequence.push({ type: 'break', id, startTime: 1, duration: 2, visualWidth: 40, muted: false });
         }
         updateUI();
     }
 
+    // ── removeItem(id) ───────────────────────────────────────────────────────
+    // Removes the item with the given id from the sequence, then refreshes colors and UI.
     function removeItem(id) {
         sequence = sequence.filter(i => i.id !== id);
-        applyAutoColors(); 
+        applyAutoColors(); // Re-derive colors since group structure may have changed
         updateUI();
     }
 
+    // ── moveItem(id, direction) ──────────────────────────────────────────────
+    // Moves an item one position up (direction = -1) or down (+1) in the array.
+    // Swaps adjacent elements via destructuring assignment.
     function moveItem(id, direction) {
-        const index = sequence.findIndex(i => i.id === id);
+        const index    = sequence.findIndex(i => i.id === id);
         if (index < 0) return;
         const newIndex = index + direction;
         if (newIndex < 0 || newIndex >= sequence.length) return;
         
         [sequence[index], sequence[newIndex]] = [sequence[newIndex], sequence[index]];
-        applyAutoColors(); 
+        applyAutoColors();
         updateUI();
     }
 
+    // ── moveToTop(id) / moveToBottom(id) ────────────────────────────────────
+    // Moves an item to the very first or very last position in the sequence.
     function moveToTop(id) {
         const index = sequence.findIndex(i => i.id === id);
         if (index <= 0) return;
-        const item = sequence.splice(index, 1)[0];
-        sequence.unshift(item);
-        applyAutoColors(); 
+        const item = sequence.splice(index, 1)[0]; // Remove from current position
+        sequence.unshift(item);                     // Prepend to the front
+        applyAutoColors();
         updateUI();
     }
 
     function moveToBottom(id) {
         const index = sequence.findIndex(i => i.id === id);
         if (index < 0 || index === sequence.length - 1) return;
-        const item = sequence.splice(index, 1)[0];
-        sequence.push(item);
-        applyAutoColors(); 
+        const item = sequence.splice(index, 1)[0]; // Remove from current position
+        sequence.push(item);                        // Append to the end
+        applyAutoColors();
         updateUI();
     }
 
+    // ── updateVal(id, key, val, needsUIUpdate) ───────────────────────────────
+    // Generic setter called by all card input fields via oninput / onchange.
+    //   • 'name' and 'parentId' are stored as strings.
+    //   • All other keys are coerced to float (defaulting to 0).
+    // needsUIUpdate=true forces a full card re-render (e.g. after parent change).
     function updateVal(id, key, val, needsUIUpdate = false) {
         const item = sequence.find(i => i.id === id);
         if (item) {
             if (key === 'name' || key === 'parentId') {
                 item[key] = val;
-                if(key === 'parentId') applyAutoColors();
+                if(key === 'parentId') applyAutoColors(); // Group structure changed
             } else {
-                item[key] = parseFloat(val) || 0; 
+                item[key] = parseFloat(val) || 0; // Coerce numeric fields
             }
             if (needsUIUpdate) updateUI(); else render(false);
         }
     }
 
+    // ── updateUI() ───────────────────────────────────────────────────────────
+    // Clears and re-renders the entire sidebar item list from the sequence array,
+    // then calls render() to refresh the SVG diagram.
+    // Each item generates an .item-card <div> with:
+    //   Rail  → color swatch, name input, delay/rise fields, parent selector,
+    //           trigger-% and additional-delay fields, reorder/delete controls.
+    //   Break → start-time, span, visual-width inputs + mute/reorder/delete controls.
     function updateUI() {
         const list = document.getElementById('itemList');
         list.innerHTML = '';
+        // Build the parent-selector option list once for all rail cards
         const railOptions = sequence.filter(i => i.type === 'rail');
         
         sequence.forEach((item, index) => {
             const card = document.createElement('div');
             card.className = `item-card ${item.type}`;
+            // Muted break cards are dimmed to signal they are inactive
             if (item.type === 'break' && item.muted) {
                 card.style.opacity = '0.5';
             }
             
             if (item.type === 'rail') {
+                // ── Reorder / delete control cluster ────────────────────────
                 const controlsHTML = `
                     <div class="card-controls">
-                        <button class="icon-btn" onclick="moveToTop('${item.id}')" title="Move to Top">⇈</button>
+                        <button class="icon-btn" onclick="moveToTop('${item.id}')"    title="Move to Top">⇈</button>
                         <button class="icon-btn" onclick="moveItem('${item.id}', -1)" title="Move Up">▲</button>
-                        <button class="icon-btn" onclick="moveItem('${item.id}', 1)" title="Move Down">▼</button>
+                        <button class="icon-btn" onclick="moveItem('${item.id}', 1)"  title="Move Down">▼</button>
                         <button class="icon-btn" onclick="moveToBottom('${item.id}')" title="Move to Bottom">⇊</button>
                         <button class="icon-btn remove" onclick="removeItem('${item.id}')" title="Delete">✕</button>
                     </div>
                 `;
 
+                // Build the <option> list for the parent-trigger selector
                 let options = `<option value="none">None (Start 0)</option>`;
                 railOptions.forEach(r => { if (r.id !== item.id) options += `<option value="${r.id}" ${item.parentId === r.id ? 'selected' : ''}>${r.name}</option>`; });
                 
+                // Default missing fields introduced in later format versions
                 let tPct = item.triggerPct !== undefined ? item.triggerPct : 100;
-                let aDly = item.addDelay !== undefined ? item.addDelay : 0;
+                let aDly = item.addDelay   !== undefined ? item.addDelay   : 0;
                 
-                const cText = item.colorMode === 'auto' ? 'A' : 'M';
+                // Small colored swatch showing colorMode ('A' = auto, 'M' = manual)
+                const cText    = item.colorMode === 'auto' ? 'A' : 'M';
                 const colorBtn = `<div class="color-btn" onclick="openColorPopup('${item.id}', this)" title="Color Settings" style="width:12px; height:18px; padding:0; border:1px solid #000; border-radius:3px; cursor:pointer; flex-shrink:0; background:${item.color}; color:#000; font-weight:bold; font-size:9px; display:flex; align-items:center; justify-content:center;">${cText}</div>`;
 
                 card.innerHTML = `
                     ${controlsHTML}
                     
+                    <!-- Rail name row: color swatch + editable text field -->
                     <div style="display:flex; gap:6px; align-items:center; margin-bottom: 4px; width: calc(100% - 135px);">
                         ${colorBtn}
                         <input type="text" value="${item.name}" oninput="updateVal('${item.id}', 'name', this.value)" style="margin:0; flex-grow:1;">
                     </div>
                     
+                    <!-- Timing row 1: base delay (ms after trigger) and rise/fall duration -->
                     <div style="display:flex;gap:5px;">
                         <div style="flex:1"><label>Base Delay</label><input type="number" value="${item.delay}" oninput="updateVal('${item.id}', 'delay', this.value)"></div>
-                        <div style="flex:1"><label>Fall/Rise</label><input type="number" value="${item.rise}" oninput="updateVal('${item.id}', 'rise', this.value)"></div>
+                        <div style="flex:1"><label>Fall/Rise</label><input type="number" value="${item.rise}"  oninput="updateVal('${item.id}', 'rise',  this.value)"></div>
                     </div>
                     
+                    <!-- Timing row 2: parent selector, trigger percentage, additional delay -->
                     <div style="display:flex;gap:5px;">
                         <div style="flex:2">
                             <label>Trigger Parent</label>
+                            <!-- Changing parent changes group structure → full UI rebuild -->
                             <select onchange="updateVal('${item.id}', 'parentId', this.value, true)">${options}</select>
                         </div>
                         <div style="flex:1">
                             <label>Trig %</label>
+                            <!-- At what % of the parent's rise this rail's delay begins -->
                             <input type="number" min="0" max="100" value="${tPct}" oninput="updateVal('${item.id}', 'triggerPct', this.value)">
                         </div>
                         <div style="flex:1">
                             <label>Add. Dly</label>
+                            <!-- Extra delay stacked on top of base delay (for PSEQ addDelay) -->
                             <input type="number" value="${aDly}" oninput="updateVal('${item.id}', 'addDelay', this.value)">
                         </div>
                     </div>
                 `;
             } else {
-                const muteIcon = item.muted ? '🙈' : '👁️';
+                // ── Break card ───────────────────────────────────────────────
+                const muteIcon  = item.muted ? '🙈' : '👁️';
                 const muteTitle = item.muted ? 'Unmute Break' : 'Mute Break';
 
                 const controlsHTML = `
                     <div class="card-controls">
-                        <button class="icon-btn" onclick="toggleMute('${item.id}')" title="${muteTitle}">${muteIcon}</button>
-                        <button class="icon-btn" onclick="moveToTop('${item.id}')" title="Move to Top">⇈</button>
+                        <button class="icon-btn" onclick="toggleMute('${item.id}')"   title="${muteTitle}">${muteIcon}</button>
+                        <button class="icon-btn" onclick="moveToTop('${item.id}')"    title="Move to Top">⇈</button>
                         <button class="icon-btn" onclick="moveItem('${item.id}', -1)" title="Move Up">▲</button>
-                        <button class="icon-btn" onclick="moveItem('${item.id}', 1)" title="Move Down">▼</button>
+                        <button class="icon-btn" onclick="moveItem('${item.id}', 1)"  title="Move Down">▼</button>
                         <button class="icon-btn" onclick="moveToBottom('${item.id}')" title="Move to Bottom">⇊</button>
                         <button class="icon-btn remove" onclick="removeItem('${item.id}')" title="Delete">✕</button>
                     </div>
@@ -781,8 +1094,11 @@
                     ${controlsHTML}
                     <div style="font-weight:bold; color:var(--break); font-size:0.75rem; margin-top:2px;">TIME BREAK</div>
                     <div style="display:flex;gap:5px; margin-top:10px;">
+                        <!-- startTime: logical time (ms) at which the break begins -->
                         <div style="flex:1"><label>Start (ms)</label><input type="number" step="0.1" value="${item.startTime !== undefined ? item.startTime : 1}" oninput="updateVal('${item.id}', 'startTime', this.value)"></div>
-                        <div style="flex:1"><label>Span (ms)</label><input type="number" value="${item.duration}" oninput="updateVal('${item.id}', 'duration', this.value)"></div>
+                        <!-- duration: how many ms of real time the break compresses away -->
+                        <div style="flex:1"><label>Span (ms)</label><input type="number" value="${item.duration}"    oninput="updateVal('${item.id}', 'duration',    this.value)"></div>
+                        <!-- visualWidth: how many SVG pixels the break gap occupies -->
                         <div style="flex:1"><label>Width (px)</label><input type="number" value="${item.visualWidth}" oninput="updateVal('${item.id}', 'visualWidth', this.value)"></div>
                     </div>
                 `;
@@ -792,92 +1108,128 @@
         render(false);
     }
 
+    // ── render(isZooming) ────────────────────────────────────────────────────
+    // Core rendering function.  Rebuilds the entire SVG diagram from scratch.
+    //
+    // Pipeline:
+    //   1. Compute logical (time-domain) geometry for every rail.
+    //   2. Determine the pixel-per-ms SCALE factor (auto-fit or zoom%).
+    //   3. Define getPhysicalX() / getLogicalTime() coordinate transforms
+    //      that account for compressed break regions.
+    //   4. Convert logical positions to physical SVG x-coordinates.
+    //   5. Build SVG markup strings for grid, markers, rail waveforms,
+    //      break visuals, delay arrows, and the total-time annotation.
+    //   6. Write all markup into the <svg> element in the correct Z-order.
+    //
+    // isZooming=true: preserves the logical center point of the viewport so
+    // the display doesn't jump when the user changes the zoom level.
     function render(isZooming = false) {
-        const svg = document.getElementById('visualizer');
-        const mainContainer = document.querySelector('.main');
-        const isDown = document.getElementById('powerDownMode').checked;
-        const isBW = document.getElementById('datasheetMode').checked;
+        const svg            = document.getElementById('visualizer');
+        const mainContainer  = document.querySelector('.main');
+        const isDown         = document.getElementById('powerDownMode').checked;
+        const isBW           = document.getElementById('datasheetMode').checked;
         
-        const colors = { 
-            bg: isBW ? "#fff" : "#0a0a0a", 
-            text: isBW ? "#333" : "#888", 
-            arrow: isBW ? "#444" : (isDown ? "#ff5252" : "#ffea00"), 
-            marker: isBW ? "#bbb" : "#333", 
-            markerText: isBW ? "#000" : (isDown ? "#ff5252" : "#00e676"),
-            grid: isBW ? "#e0e0e0" : "#1f1f1f",
-            axis: isBW ? "#888" : "#555",
-            gridText: isBW ? "#555" : "#666",
-            totalTime: isBW ? "#555" : "#29b6f6" 
+        // Color scheme: dark (default) vs black-and-white (datasheet) mode
+        const colors = {
+            bg:         isBW ? "#fff"   : "#0a0a0a",
+            text:       isBW ? "#333"   : "#888",
+            arrow:      isBW ? "#444"   : (isDown ? "#ff5252" : "#ffea00"),  // delay arrows
+            marker:     isBW ? "#bbb"   : "#333",                            // Tn dashed lines
+            markerText: isBW ? "#000"   : (isDown ? "#ff5252" : "#00e676"),  // Tn labels
+            grid:       isBW ? "#e0e0e0": "#1f1f1f",                         // vertical grid lines
+            axis:       isBW ? "#888"   : "#555",                            // time axis
+            gridText:   isBW ? "#555"   : "#666",                            // tick labels
+            totalTime:  isBW ? "#555"   : "#29b6f6"                          // total-time span annotation
         };
 
-        const LANE_H = 65;       
-        const SIGNAL_AMP = 30;   
-        const X_OFF = 160;       
+        const LANE_H     = 65;   // pixels per rail lane (vertical spacing between waveforms)
+        const SIGNAL_AMP = 30;   // pixel height of the waveform amplitude (0 → HIGH level)
+        const X_OFF      = 160;  // left margin reserved for rail name labels
         
+        // ── Zoom-center preservation ──────────────────────────────────────────
+        // Record the logical time at the center of the viewport before rescaling
+        // so we can scroll back to the same position after the scale changes.
         let oldCenterLogicalX = 0;
-        let didRecordCenter = false;
+        let didRecordCenter   = false;
         
         if (isZooming && mainContainer && window.currentSCALE) {
-            const cw = mainContainer.clientWidth;
-            const scrollX = mainContainer.scrollLeft;
-            oldCenterLogicalX = (scrollX + cw / 2 - X_OFF) / window.currentSCALE;
-            didRecordCenter = true;
+            const cw              = mainContainer.clientWidth;
+            const scrollX         = mainContainer.scrollLeft;
+            oldCenterLogicalX     = (scrollX + cw / 2 - X_OFF) / window.currentSCALE;
+            didRecordCenter       = true;
         }
 
+        // ── Pass 1: Logical geometry ──────────────────────────────────────────
+        // For each rail, compute its trigger time, delay-start time, and end time
+        // all in logical ms, based on its parent's geometry.
         let maxLogicalTime = 0;
-        let logicalGeom = {};
-        let breakList = [];
+        let logicalGeom    = {}; // id → { triggerTime, start, end, ... }
+        let breakList      = []; // active (non-muted) break items
         
         sequence.forEach((item) => {
             if (item.type === 'break') {
-                if (item.muted) return; 
+                if (item.muted) return; // Skip muted breaks entirely
                 if(item.startTime === undefined) item.startTime = 1;
                 breakList.push(item);
             } else if (item.type === 'rail') {
                 let startLog = 0;
-                let tPct = item.triggerPct !== undefined ? item.triggerPct : 100;
-                let aDly = item.addDelay !== undefined ? item.addDelay : 0;
+                let tPct     = item.triggerPct !== undefined ? item.triggerPct : 100;
+                let aDly     = item.addDelay   !== undefined ? item.addDelay   : 0;
                 
+                // Derive this rail's trigger point from its parent's waveform
                 if (item.parentId !== 'none' && logicalGeom[item.parentId]) {
                     const p = logicalGeom[item.parentId];
                     if (isDown) {
+                        // Power-down: trigger at (100-tPct)% of the parent's fall
                         startLog = p.start + (p.end - p.start) * ((100 - tPct) / 100);
                     } else {
+                        // Power-up: trigger at tPct% of the parent's rise
                         startLog = p.start + (p.end - p.start) * (tPct / 100);
                     }
                 }
                 
                 let triggerTime = startLog;
-                let totalDelay = item.delay + aDly;
-                let start = triggerTime + totalDelay;
-                let end = start + item.rise;
+                let totalDelay  = item.delay + aDly;
+                let start       = triggerTime + totalDelay; // waveform edge starts here
+                let end         = start + item.rise;        // waveform edge ends here
                 
-                logicalGeom[item.id] = { 
-                    triggerTime, start, end, totalDelay, delay: item.delay, addDelay: aDly, rise: item.rise, 
-                    name: item.name, color: isBW ? "#000" : item.color, parentId: item.parentId, triggerPct: tPct 
+                logicalGeom[item.id] = {
+                    triggerTime, start, end, totalDelay,
+                    delay: item.delay, addDelay: aDly, rise: item.rise,
+                    name: item.name, color: isBW ? "#000" : item.color,
+                    parentId: item.parentId, triggerPct: tPct
                 };
                 
                 if (end > maxLogicalTime) maxLogicalTime = end;
             }
         });
 
+        // Sort breaks by start time for correct left-to-right processing
         let sortedBreaks = [...breakList].sort((a, b) => a.startTime - b.startTime);
 
-        let SCALE = window.currentSCALE || 5; 
+        // ── Pass 2: Determine pixel scale ────────────────────────────────────
+        let SCALE = window.currentSCALE || 5; // px / ms
+
+        // Effective total time: may be extended by the full-scale override
+        const scaleOvrEnabled  = document.getElementById('fullScaleOverride').checked;
+        const scaleOvrMs       = parseFloat(document.getElementById('fullScaleMs').value) || 0;
+        const effectiveMaxTime = (scaleOvrEnabled && scaleOvrMs > 0) ? Math.max(maxLogicalTime, scaleOvrMs) : maxLogicalTime;
         
-        let L_total = maxLogicalTime;
-        let W_breaks = 0;
+        // Compute the "compressed" logical duration: subtract time hidden by breaks
+        let L_total  = effectiveMaxTime;
+        let W_breaks = 0; // total visual (pixel) width consumed by breaks
         sortedBreaks.forEach(b => {
-            if (b.startTime < maxLogicalTime) {
-                let overlap = Math.min(b.duration, maxLogicalTime - b.startTime);
-                L_total -= overlap;
+            if (b.startTime < effectiveMaxTime) {
+                let overlap = Math.min(b.duration, effectiveMaxTime - b.startTime);
+                L_total  -= overlap;
                 W_breaks += b.visualWidth;
             }
         });
-        if (L_total < 0.1) L_total = 0.1; 
+        if (L_total < 0.1) L_total = 0.1; // Guard against division by zero
 
-        if (mainContainer && maxLogicalTime > 0) {
-            const availableWidthForScale = mainContainer.clientWidth - X_OFF - 100 - W_breaks; 
+        // Fit the diagram to the available canvas width, then apply zoom factor
+        if (mainContainer && effectiveMaxTime > 0) {
+            const availableWidthForScale = mainContainer.clientWidth - X_OFF - 100 - W_breaks;
             if (availableWidthForScale > 50) {
                 const baseScaleFit100 = availableWidthForScale / L_total;
                 if (document.getElementById('autoScaleX').checked) {
@@ -889,112 +1241,135 @@
         }
         window.currentSCALE = SCALE;
 
+        // ── getPhysicalX(timeMs) ──────────────────────────────────────────────
+        // Converts a logical time in ms to a physical SVG x-coordinate.
+        // Regions covered by a break are compressed into the break's visualWidth pixels.
         function getPhysicalX(timeMs) {
-            let px = X_OFF;
-            let currentLog = 0;
+            let px         = X_OFF;
+            let currentLog = 0; // logical time at the left edge of the current segment
             for (let b of sortedBreaks) {
                 if (timeMs <= b.startTime) {
+                    // Time falls before this break: linear scale
                     return px + (timeMs - currentLog) * SCALE;
                 }
                 if (timeMs < b.startTime + b.duration) {
+                    // Time falls inside the break: interpolate within visualWidth
                     let ratio = (timeMs - b.startTime) / b.duration;
                     return px + (b.startTime - currentLog) * SCALE + ratio * b.visualWidth;
                 }
-                px += (b.startTime - currentLog) * SCALE + b.visualWidth;
+                // Advance past this break
+                px        += (b.startTime - currentLog) * SCALE + b.visualWidth;
                 currentLog = b.startTime + b.duration;
             }
             return px + (timeMs - currentLog) * SCALE;
         }
 
+        // ── getLogicalTime(xPos) ─────────────────────────────────────────────
+        // Inverse of getPhysicalX: converts a physical SVG x-coordinate back
+        // to a logical time in ms (used for grid-tick calculation and total-time display).
         function getLogicalTime(xPos) {
             if (xPos <= X_OFF) return 0;
-            let px = X_OFF;
+            let px         = X_OFF;
             let currentLog = 0;
             for (let b of sortedBreaks) {
                 let distToBreak = (b.startTime - currentLog) * SCALE;
                 if (xPos <= px + distToBreak) {
                     return currentLog + (xPos - px) / SCALE;
                 }
-                px += distToBreak;
+                px        += distToBreak;
                 currentLog = b.startTime;
                 
                 if (xPos <= px + b.visualWidth) {
                     let ratio = (xPos - px) / b.visualWidth;
                     return currentLog + ratio * b.duration;
                 }
-                px += b.visualWidth;
+                px        += b.visualWidth;
                 currentLog += b.duration;
             }
             return currentLog + (xPos - px) / SCALE;
         }
 
-        let railGeometries = {}; 
-        let maxReachedX = X_OFF;
-        let railIndex = 0;
+        // ── Pass 3: Physical geometry ─────────────────────────────────────────
+        // Attach physical x-coordinates and the lane y-coordinate to each rail's
+        // geometry record, and track the rightmost pixel reached.
+        let railGeometries = {}; // id → extended geometry including physical coords
+        let maxReachedX    = X_OFF;
+        let railIndex      = 0;
         
         sequence.forEach((item) => {
             if (item.type === 'rail') {
-                const y = (railIndex + 1) * LANE_H + 50; 
-                let g = logicalGeom[item.id];
+                const y = (railIndex + 1) * LANE_H + 50; // vertical center of this lane
+                let g   = logicalGeom[item.id];
                 
-                g.y = y;
-                g.anchorPhys = getPhysicalX(g.triggerTime);
-                g.startPhys = getPhysicalX(g.start);
-                g.endPhys = getPhysicalX(g.end);
+                g.y          = y;
+                g.anchorPhys = getPhysicalX(g.triggerTime); // where the parent-trigger arrow points
+                g.startPhys  = getPhysicalX(g.start);       // where the waveform edge begins
+                g.endPhys    = getPhysicalX(g.end);         // where the waveform edge ends
                 
                 railGeometries[item.id] = g;
-                
                 maxReachedX = Math.max(maxReachedX, g.endPhys);
                 railIndex++;
             }
         });
         
+        // Also extend the canvas right edge to cover any break that ends beyond the last rail
         sortedBreaks.forEach(b => {
             let breakEndPhys = getPhysicalX(b.startTime + b.duration);
             maxReachedX = Math.max(maxReachedX, breakEndPhys);
         });
 
-        let lastRailY = railIndex > 0 ? (railIndex * LANE_H + 50) : 50;
-        const totalWidth = maxReachedX + 100;
-        const totalHeight = lastRailY + 45; 
+        // When scale override is active, extend the SVG to show the full override time window
+        if (scaleOvrEnabled && scaleOvrMs > 0) {
+            maxReachedX = Math.max(maxReachedX, getPhysicalX(scaleOvrMs));
+        }
+
+        // ── SVG canvas dimensions ─────────────────────────────────────────────
+        let lastRailY    = railIndex > 0 ? (railIndex * LANE_H + 50) : 50;
+        const totalWidth = maxReachedX + 100; // right padding
+        const totalHeight = lastRailY  + 45;  // bottom padding
         
         svg.style.background = colors.bg;
-        svg.setAttribute('width', totalWidth);
+        svg.setAttribute('width',  totalWidth);
         svg.setAttribute('height', totalHeight);
 
+        // Restore the scroll position to keep the logical center in view after zoom
         if (isZooming && didRecordCenter) {
-            const cw = mainContainer.clientWidth;
+            const cw           = mainContainer.clientWidth;
             const newCenterPhys = X_OFF + (oldCenterLogicalX * SCALE);
             mainContainer.scrollLeft = newCenterPhys - cw / 2;
         }
 
-        let htmlGridLines = '';
-        let htmlGridText = '';
-        let htmlMarkerLines = '';
-        let htmlRails = '';
-        let htmlBreakBGs = '';
-        let htmlBreakTexts = '';
-        let htmlDelayArrows = ''; 
-        let htmlTopLines = '';
-        let htmlMarkerTexts = '';
-        let htmlTopTexts = '';
+        // ── SVG markup accumulators (built as strings for performance) ─────────
+        let htmlGridLines   = ''; // vertical grid lines at each time tick
+        let htmlGridText    = ''; // tick labels + horizontal axis line
+        let htmlMarkerLines = ''; // dashed vertical Tn marker lines
+        let htmlRails       = ''; // waveform paths, labels, parent-trigger arrows
+        let htmlBreakBGs    = ''; // break region backgrounds + squiggle lines
+        let htmlBreakTexts  = ''; // break duration labels
+        let htmlDelayArrows = ''; // horizontal delay/rise span arrows
+        let htmlTopLines    = ''; // total-time bracket lines
+        let htmlMarkerTexts = ''; // Tn label texts
+        let htmlTopTexts    = ''; // total-time text annotation
 
-        const targetMs = 80 / SCALE; 
+        // ── Time axis ────────────────────────────────────────────────────────
+        // Calculate a "nice" tick interval so ticks are approximately 80 px apart.
+        const targetMs = 80 / SCALE;
         const magnitude = Math.pow(10, Math.floor(Math.log10(targetMs)));
         const val = targetMs / magnitude;
         let tickMs;
-        if (val < 1.5) tickMs = 1 * magnitude;
-        else if (val < 3.5) tickMs = 2 * magnitude;
-        else if (val < 7.5) tickMs = 5 * magnitude;
-        else tickMs = 10 * magnitude;
+        if      (val < 1.5) tickMs = 1  * magnitude;
+        else if (val < 3.5) tickMs = 2  * magnitude;
+        else if (val < 7.5) tickMs = 5  * magnitude;
+        else                tickMs = 10 * magnitude;
 
+        // Draw the horizontal axis line, skipping the break regions (replaced by squiggles)
         let currentX = X_OFF;
         sortedBreaks.forEach(b => {
             let pxStart = getPhysicalX(b.startTime);
-            let midX = pxStart + (b.visualWidth / 2);
-            let gap = b.visualWidth / 5;
+            let midX    = pxStart + (b.visualWidth / 2);
+            let gap     = b.visualWidth / 5;
             let breakStart = midX - gap;
-            let breakEnd = midX + gap;
+            let breakEnd   = midX + gap;
             
             if (breakStart > currentX) {
                 htmlGridText += `<line x1="${currentX}" y1="25" x2="${breakStart}" y2="25" stroke="${colors.axis}" stroke-width="2" />`;
@@ -1005,44 +1380,49 @@
             htmlGridText += `<line x1="${currentX}" y1="25" x2="${totalWidth}" y2="25" stroke="${colors.axis}" stroke-width="2" />`;
         }
 
+        // Draw vertical grid lines and tick labels at each tickMs interval
         const calculatedMaxLogTime = getLogicalTime(totalWidth);
         
         for (let t = 0; t <= calculatedMaxLogTime; t += tickMs) {
-            t = Math.round(t * 1000) / 1000;
+            t = Math.round(t * 1000) / 1000; // Fix floating-point drift
             
+            // Skip ticks that fall inside a compressed break region
             let inBreak = sortedBreaks.some(b => t > b.startTime && t < b.startTime + b.duration);
             if (inBreak) continue;
 
             let px = getPhysicalX(t);
             if (px !== null) {
                 htmlGridLines += `<line x1="${px}" y1="25" x2="${px}" y2="${totalHeight}" stroke="${colors.grid}" stroke-width="1" />`;
-                htmlGridText += `<line x1="${px}" y1="21" x2="${px}" y2="29" stroke="${colors.axis}" stroke-width="2" />`;
-                htmlGridText += `<text x="${px}" y="15" fill="${colors.gridText}" font-size="11" text-anchor="middle" font-family="monospace">${t}ms</text>`;
+                htmlGridText  += `<line x1="${px}" y1="21" x2="${px}" y2="29" stroke="${colors.axis}" stroke-width="2" />`; // tick mark
+                htmlGridText  += `<text x="${px}" y="15" fill="${colors.gridText}" font-size="11" text-anchor="middle" font-family="monospace">${t}ms</text>`;
             }
         }
 
+        // ── Tn markers ───────────────────────────────────────────────────────
+        // Each rail's waveform start gets a "T0", "T1", … label.
+        // Labels are staggered across 4 vertical levels to avoid overlap when
+        // two rails start at nearly the same time.
         let markers = Object.values(railGeometries).map((g, i) => ({ x: g.startPhys, label: `T${i}` }));
-        markers.sort((a, b) => a.x - b.x); 
+        markers.sort((a, b) => a.x - b.x); // Sort left-to-right for level assignment
         
-        let lastX = [-999, -999, -999, -999]; 
-        const MIN_DIST = 26; 
+        let lastX    = [-999, -999, -999, -999]; // last x used on each of the 4 levels
+        const MIN_DIST = 26; // minimum pixel gap before a label can reuse a level
 
         markers.forEach(m => {
             let level = 0;
             for(let i=0; i<4; i++) {
-                if(m.x - lastX[i] >= MIN_DIST) {
-                    level = i;
-                    break;
-                }
+                if(m.x - lastX[i] >= MIN_DIST) { level = i; break; }
             }
-            if (m.x - lastX[level] < MIN_DIST) level = 3; 
-            m.level = level;
+            if (m.x - lastX[level] < MIN_DIST) level = 3; // overflow to the last level
+            m.level    = level;
             lastX[level] = m.x;
         });
 
         markers.forEach(m => {
+            // Dashed vertical line spanning the full diagram height
             htmlMarkerLines += `<line x1="${m.x}" y1="45" x2="${m.x}" y2="${lastRailY + 10}" stroke="${colors.marker}" stroke-width="1" stroke-dasharray="4,4" opacity="0.6"/>`;
             
+            // Levels 0 and 2 → label above the axis; levels 1 and 3 → label below the last rail
             if (m.level === 0 || m.level === 2) {
                 const topY = 38 + (m.level === 2 ? 12 : 0);
                 htmlMarkerTexts += `<text x="${m.x}" y="${topY}" fill="${colors.markerText}" font-size="10" font-weight="bold" text-anchor="middle">${m.label}</text>`;
@@ -1052,38 +1432,49 @@
             }
         });
 
+        // ── Rail waveforms ───────────────────────────────────────────────────
         Object.values(railGeometries).forEach(g => {
-            let path = isDown ? 
+            // Build the step waveform path:
+            //   Power-up:   flat LOW → rises to HIGH at startPhys → stays HIGH
+            //   Power-down: flat HIGH → falls to LOW at startPhys → stays LOW
+            let path = isDown ?
                 `M ${X_OFF},${g.y-SIGNAL_AMP} L ${g.startPhys},${g.y-SIGNAL_AMP} L ${g.endPhys},${g.y} L ${totalWidth},${g.y}` :
                 `M ${X_OFF},${g.y} L ${g.startPhys},${g.y} L ${g.endPhys},${g.y-SIGNAL_AMP} L ${totalWidth},${g.y-SIGNAL_AMP}`;
             
             htmlRails += `<path d="${path}" fill="none" stroke="${g.color}" stroke-width="3" stroke-linecap="round" />`;
+            // Rail name label on the left margin
             htmlRails += `<text x="15" y="${g.y-5}" fill="${g.color}" font-size="14" font-weight="bold" font-family="Arial">${g.name}</text>`;
             
+            // Draw a dashed arrow from the parent trigger point to this rail's anchor
             if (g.parentId !== 'none' && railGeometries[g.parentId]) {
                 const parent = railGeometries[g.parentId];
+                // yF: y-position on the parent waveform at the trigger percentage
                 const yF = parent.y - SIGNAL_AMP * (g.triggerPct / 100);
-                const yT = isDown ? g.y - SIGNAL_AMP : g.y - 10;
+                const yT = isDown ? g.y - SIGNAL_AMP : g.y - 10; // destination on this rail
                 
                 htmlRails += `<line x1="${g.anchorPhys}" y1="${yF}" x2="${g.anchorPhys}" y2="${yT}" stroke="${colors.arrow}" stroke-width="1" stroke-dasharray="3,3" opacity="0.6" />`;
-                htmlRails += `<circle cx="${g.anchorPhys}" cy="${yF}" r="3" fill="${colors.arrow}" />`;
+                htmlRails += `<circle cx="${g.anchorPhys}" cy="${yF}" r="3" fill="${colors.arrow}" />`; // dot on parent waveform
             }
             
+            // Draw a horizontal span arrow showing total delay + rise time
             if (g.totalDelay > 0 || g.rise > 0) {
-                let arrowY = g.y - SIGNAL_AMP - 10;
+                let arrowY   = g.y - SIGNAL_AMP - 10; // just above the waveform
                 let fullTime = Math.round((g.totalDelay + g.rise) * 1000) / 1000;
                 let delayText = `${fullTime}ms`;
                 
+                // Horizontal line with arrowheads at each end
                 htmlDelayArrows += `<line x1="${g.anchorPhys}" y1="${arrowY}" x2="${g.endPhys}" y2="${arrowY}" stroke="${colors.arrow}" stroke-width="1.5" />`;
                 htmlDelayArrows += `<path d="M${g.anchorPhys+6} ${arrowY-4} L${g.anchorPhys} ${arrowY} L${g.anchorPhys+6} ${arrowY+4} M${g.endPhys-6} ${arrowY-4} L${g.endPhys} ${arrowY} L${g.endPhys-6} ${arrowY+4}" fill="none" stroke="${colors.arrow}" />`;
                 htmlDelayArrows += `<text x="${(g.anchorPhys+g.endPhys)/2}" y="${arrowY-5}" fill="${colors.arrow}" font-size="11" text-anchor="middle" font-weight="bold" font-family="monospace">${delayText}</text>`;
                 
+                // Optional tick mark at the boundary between base delay and addDelay
                 if (g.addDelay > 0 && g.delay > 0) {
                     let splitPhys = getPhysicalX(g.triggerTime + g.delay);
                     if (splitPhys - g.anchorPhys >= 10 && g.endPhys - splitPhys >= 10) {
                         htmlDelayArrows += `<line x1="${splitPhys}" y1="${arrowY}" x2="${splitPhys}" y2="${arrowY + 4}" stroke="${colors.arrow}" stroke-width="1.5" />`;
                     }
                 }
+                // Optional tick mark at the boundary between total delay and rise time
                 if (g.rise > 0 && g.totalDelay > 0) {
                     let riseStartPhys = getPhysicalX(g.start);
                     if (riseStartPhys - g.anchorPhys >= 10 && g.endPhys - riseStartPhys >= 10) {
@@ -1093,40 +1484,57 @@
             }
         });
 
+        // ── Break visuals ────────────────────────────────────────────────────
+        // Each active break is rendered as:
+        //   • A background rectangle to erase the waveforms underneath.
+        //   • Two vertical squiggle (SVG cubic bezier) lines indicating the gap.
+        //   • A centered label showing the compressed duration.
         sortedBreaks.forEach(b => {
-            let pxStart = getPhysicalX(b.startTime);
-            const midX = pxStart + (b.visualWidth / 2);
-            const curve = b.visualWidth / 3, gap = b.visualWidth / 5;
-            
+            let pxStart        = getPhysicalX(b.startTime);
+            const midX         = pxStart + (b.visualWidth / 2);
+            const curve        = b.visualWidth / 3; // bezier control-point offset
+            const gap          = b.visualWidth / 5; // spacing between the two squiggles
+
+            // Background rectangle hides waveforms that would otherwise show through the gap
             htmlBreakBGs += `<rect x="${pxStart}" y="25" width="${b.visualWidth}" height="${totalHeight - 25}" fill="${colors.bg}" />`;
+
+            // Helper: generate a full-height squiggle path at horizontal offset `off`
             const p = (off) => {
                 let d = `M ${off} 25`;
-                for (let y = 25; y < totalHeight; y += 100) d += ` C ${off + curve} ${y + 25}, ${off - curve} ${y + 75}, ${off} ${y + 100}`;
+                for (let y = 25; y < totalHeight; y += 100)
+                    d += ` C ${off + curve} ${y + 25}, ${off - curve} ${y + 75}, ${off} ${y + 100}`;
                 return d;
             };
             htmlBreakBGs += `<path d="${p(midX-gap)}" stroke="${colors.text}" stroke-width="2" fill="none" />
                            <path d="${p(midX+gap)}" stroke="${colors.text}" stroke-width="2" fill="none" />`;
             
-            const textWidth = b.duration.toString().length * 8 + 20; 
+            // Duration label with a background rect so it reads clearly over squiggles
+            const textWidth = b.duration.toString().length * 8 + 20;
             htmlBreakTexts += `<rect x="${midX - (textWidth/2)}" y="35" width="${textWidth}" height="20" fill="${colors.bg}" rx="4" />
                            <text x="${midX}" y="50" fill="${colors.text}" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">${b.duration}ms</text>`;
         });
 
+        // ── Total-time annotation ─────────────────────────────────────────────
+        // A double-headed horizontal arrow from the first waveform start to the
+        // last waveform end, with the total logical duration shown above it.
         if (Object.keys(railGeometries).length > 0) {
             let minX = Infinity;
             let maxX = X_OFF;
             Object.values(railGeometries).forEach(g => {
                 if (g.startPhys < minX) minX = g.startPhys;
-                if (g.endPhys > maxX) maxX = g.endPhys;
+                if (g.endPhys   > maxX) maxX = g.endPhys;
             });
 
             if (minX !== Infinity) {
+                // Convert physical span back to logical time to get the true ms total
                 let totalLogicalTime = getLogicalTime(maxX) - getLogicalTime(minX);
-                let displayTimeStr = totalLogicalTime.toFixed(3);
+                let displayTimeStr   = totalLogicalTime.toFixed(3);
 
+                // Dashed vertical bracket lines at first and last waveform edges
                 htmlTopLines += `<line x1="${minX}" y1="35" x2="${minX}" y2="${lastRailY + 10}" stroke="${colors.totalTime}" stroke-width="1.5" stroke-dasharray="2,3" opacity="0.6"/>`;
                 htmlTopLines += `<line x1="${maxX}" y1="35" x2="${maxX}" y2="${lastRailY + 10}" stroke="${colors.totalTime}" stroke-width="1.5" stroke-dasharray="2,3" opacity="0.6"/>`;
                 
+                // Horizontal span line with inward-pointing arrowheads
                 htmlTopLines += `<line x1="${minX}" y1="60" x2="${maxX}" y2="60" stroke="${colors.totalTime}" stroke-width="1.5" />`;
                 htmlTopLines += `<path d="M${minX+6} 56 L${minX} 60 L${minX+6} 64 M${maxX-6} 56 L${maxX} 60 L${maxX-6} 64" fill="none" stroke="${colors.totalTime}" />`;
 
@@ -1134,35 +1542,48 @@
             }
         }
 
+        // ── Final SVG composition ─────────────────────────────────────────────
+        // Layers are written bottom-to-top so later strings paint over earlier ones:
+        //   grid lines → marker lines → rail waveforms → break backgrounds
+        //   → delay arrows → axis/tick text → total-time lines → total-time text
+        //   → break texts → marker texts
         svg.innerHTML = htmlGridLines + htmlMarkerLines + htmlRails + htmlBreakBGs + htmlDelayArrows + htmlGridText + htmlTopLines + htmlTopTexts + htmlBreakTexts + htmlMarkerTexts;
     }
 
+    // ── exportSVG() ──────────────────────────────────────────────────────────
+    // Serialises the current <svg> element to XML text and triggers a file
+    // download.  The filename is derived from the configFileName input with
+    // the .json extension replaced by .svg.
     function exportSVG() {
         const svgElement = document.getElementById('visualizer');
-        const svgData = new XMLSerializer().serializeToString(svgElement);
-        const svgBlob = new Blob([svgData], {type: "image/svg+xml;charset=utf-8"});
-        const svgUrl = URL.createObjectURL(svgBlob);
+        const svgData    = new XMLSerializer().serializeToString(svgElement);
+        const svgBlob    = new Blob([svgData], {type: "image/svg+xml;charset=utf-8"});
+        const svgUrl     = URL.createObjectURL(svgBlob);
         
         let filename = document.getElementById('configFileName').value.trim();
         if (!filename) filename = "Randomfish_A1";
-        filename = filename.replace(/\.json$/i, ".svg"); 
+        filename = filename.replace(/\.json$/i, ".svg"); // swap extension
         
-        const downloadLink = document.createElement("a");
-        downloadLink.href = svgUrl;
-        downloadLink.download = filename;
+        const downloadLink      = document.createElement("a");
+        downloadLink.href       = svgUrl;
+        downloadLink.download   = filename;
         document.body.appendChild(downloadLink);
         downloadLink.click();
         document.body.removeChild(downloadLink);
+        // Note: intentionally not revoking the URL here so the download completes
     }
 
+    // Bootstrap: build the initial UI and render the default sequence on page load
     updateUI();
 </script>
+
+<!-- Hidden footer for SEO / screen readers; not displayed to users -->
 <footer style="display:none;" aria-hidden="true">
     <section>
         <h2>About Power-Up Designer</h2>
         <p>
-            The Power-Up Designer is a specialized hardware engineering utility designed to automate the creation of 
-            voltage rail timing diagrams. When designing complex PCB systems—especially those involving FPGAs, 
+            The Power-Up Designer is a specialized hardware engineering utility designed to automate the creation of
+            voltage rail timing diagrams. When designing complex PCB systems—especially those involving FPGAs,
             SoCs, or microcontrollers—engineers must strictly adhere to specific power-on reset (POR) and power-down sequencing requirements to prevent latch-up or hardware damage.
         </p>
     </section>
