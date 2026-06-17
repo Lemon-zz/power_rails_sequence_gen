@@ -1070,13 +1070,13 @@
             }
             
             if (g.totalDelay > 0 || g.rise > 0) {
-                let arrowY = g.y - SIGNAL_AMP + 14;
+                let arrowY = g.y - SIGNAL_AMP - 10;
                 let fullTime = Math.round((g.totalDelay + g.rise) * 1000) / 1000;
                 let delayText = `${fullTime}ms`;
                 
                 htmlDelayArrows += `<line x1="${g.anchorPhys}" y1="${arrowY}" x2="${g.endPhys}" y2="${arrowY}" stroke="${colors.arrow}" stroke-width="1.5" />`;
                 htmlDelayArrows += `<path d="M${g.anchorPhys+6} ${arrowY-4} L${g.anchorPhys} ${arrowY} L${g.anchorPhys+6} ${arrowY+4} M${g.endPhys-6} ${arrowY-4} L${g.endPhys} ${arrowY} L${g.endPhys-6} ${arrowY+4}" fill="none" stroke="${colors.arrow}" />`;
-                htmlDelayArrows += `<text x="${(g.anchorPhys+g.endPhys)/2}" y="${arrowY-4}" fill="${colors.arrow}" font-size="11" text-anchor="middle" font-weight="bold" font-family="monospace">${delayText}</text>`;
+                htmlDelayArrows += `<text x="${(g.anchorPhys+g.endPhys)/2}" y="${arrowY-5}" fill="${colors.arrow}" font-size="11" text-anchor="middle" font-weight="bold" font-family="monospace">${delayText}</text>`;
                 
                 if (g.addDelay > 0 && g.delay > 0) {
                     let splitPhys = getPhysicalX(g.triggerTime + g.delay);
