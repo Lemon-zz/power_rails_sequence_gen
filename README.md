@@ -1,7 +1,4 @@
-This is online power-up/power down sequence diagram constructor. Its pretty basic, but get job done.
-There is no subscriprions, no ads.
-It can create black and white diagrams (checkbox on top left).
-I`ve no idea in web programming so all code was written by Gemini.
+This is an online power-up/power-down sequence diagram constructor. It's straightforward, but it gets the job done. There are no subscriptions and no ads. It can create black-and-white diagrams via the checkbox in the top left. I have no background in web programming, so this entire tool was built with the help of Gemini.
 
 Link:
 https://lemon-zz.github.io/power_rails_sequence_gen/
