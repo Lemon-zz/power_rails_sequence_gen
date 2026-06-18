@@ -106,6 +106,13 @@
         #configFileName { flex: 1 1 100%; text-align: center; font-weight: bold; font-size: 0.8rem; margin-top: 4px; margin-bottom: 2px; color: #fff; background: #2d2d2d; border: 1px solid #555; padding: 6px; }
         #configFileName:focus { border-color: #00b0ff; outline: none; }
 
+        /* Slow flash animation for the B&W button until first interaction */
+        @keyframes bwFlash {
+            0%,  100% { background: #2d2d2d; border-color: #444; box-shadow: none; }
+            50%        { background: #555;    border-color: #ccc; box-shadow: 0 0 6px 1px rgba(255,255,255,0.35); }
+        }
+        .bw-flash { animation: bwFlash 1.6s ease-in-out infinite; }
+
         /* Small toggle row used for mode switches (DOWN / B&W) */
         .toggle-container { background: #2d2d2d; padding: 8px; border-radius: 6px; margin-bottom: 6px; border: 1px solid #444; display: flex; align-items: center; gap: 12px; font-size: 0.75rem; cursor: pointer; }
 
@@ -183,8 +190,8 @@
             <span style="font-size:0.6rem; letter-spacing:-0.5px;">DOWN MODE</span>
         </label>
         <!-- B&W (datasheet) mode: renders the diagram in black-and-white -->
-        <label class="toggle-container" style="flex:1; margin:0; padding:6px; justify-content:center;">
-            <input type="checkbox" id="datasheetMode" onchange="render()"> 
+        <label id="bwToggleLabel" class="toggle-container bw-flash" style="flex:1; margin:0; padding:6px; justify-content:center;">
+            <input type="checkbox" id="datasheetMode" onchange="render()">
             <span style="font-size:0.6rem; letter-spacing:-0.5px;">B&W MODE</span>
         </label>
     </div>
@@ -328,6 +335,18 @@
     // Shuffled hue index array (0-6) used by the 'random' color algorithm.
     // Re-shuffled whenever the user clicks REROLL or ALL AUTO.
     window.randomHueSeed = [0,1,2,3,4,5,6].sort(() => Math.random() - 0.5);
+
+    // Remove B&W button flash animation on the first user interaction
+    (function() {
+        function stopBwFlash() {
+            const lbl = document.getElementById('bwToggleLabel');
+            if (lbl) lbl.classList.remove('bw-flash');
+            document.removeEventListener('click',   stopBwFlash, true);
+            document.removeEventListener('keydown', stopBwFlash, true);
+        }
+        document.addEventListener('click',   stopBwFlash, true);
+        document.addEventListener('keydown', stopBwFlash, true);
+    })();
 
     // Re-render (without zooming) whenever the browser window is resized
     window.addEventListener('resize', () => render(false));
